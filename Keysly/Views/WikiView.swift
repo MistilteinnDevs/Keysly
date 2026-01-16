@@ -172,6 +172,7 @@ struct WikiShortcutRow: View {
 
 enum ShortcutCategory: String, CaseIterable {
     case common, copyPaste, window, app, navigation, screenshot, finder, documents, system, input
+    case mail, safari, notes, calendar, messages
     
     var title: String {
         switch self {
@@ -185,6 +186,11 @@ enum ShortcutCategory: String, CaseIterable {
         case .documents: return "Documents"
         case .system: return "System & Power"
         case .input: return "Input & Special"
+        case .mail: return "Mail"
+        case .safari: return "Safari"
+        case .notes: return "Notes"
+        case .calendar: return "Calendar"
+        case .messages: return "Messages"
         }
     }
     
@@ -200,6 +206,11 @@ enum ShortcutCategory: String, CaseIterable {
         case .documents: return "doc.text"
         case .system: return "power"
         case .input: return "keyboard"
+        case .mail: return "envelope"
+        case .safari: return "safari"
+        case .notes: return "note.text"
+        case .calendar: return "calendar"
+        case .messages: return "message"
         }
     }
     
@@ -215,6 +226,11 @@ enum ShortcutCategory: String, CaseIterable {
         case .documents: return "Text manipulation, alignment, and editing."
         case .system: return "Sleep, restart, logout, and power options."
         case .input: return "Accents, emoji, and special characters."
+        case .mail: return "Inbox navigation, composing, and managing emails."
+        case .safari: return "Tabs, browsing history, and page navigation."
+        case .notes: return "Formatting, checklists, and note management."
+        case .calendar: return "Views, event creation, and navigation."
+        case .messages: return "Conversations, replies, and text formatting."
         }
     }
 }
@@ -236,6 +252,10 @@ struct WikiShortcut {
 
 struct WikiData {
     static func shortcuts(for category: ShortcutCategory) -> [WikiShortcut] {
+        // Check new app categories first
+        let appSpecific = appShortcuts(for: category)
+        if !appSpecific.isEmpty { return appSpecific }
+        
         switch category {
         case .common:
             return [
@@ -356,6 +376,66 @@ struct WikiData {
                  WikiShortcut(keys: "⌘ [", action: "Go to previous folder"),
                  WikiShortcut(keys: "⌘ ]", action: "Go to next folder"),
              ]
+        default:
+            return []
+        }
+    }
+
+    private static func appShortcuts(for category: ShortcutCategory) -> [WikiShortcut] {
+        switch category {
+        case .mail:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "Compose new message"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "Get all new mail"),
+                WikiShortcut(keys: "⌘ ⇧ D", action: "Send message"),
+                WikiShortcut(keys: "⌘ R", action: "Reply to sender"),
+                WikiShortcut(keys: "⌘ ⇧ R", action: "Reply to all"),
+                WikiShortcut(keys: "⌘ ⇧ F", action: "Forward message"),
+                WikiShortcut(keys: "⌘ 1", action: "Go to Inbox"),
+                WikiShortcut(keys: "⌘ 4", action: "Go to Sent"),
+            ]
+        case .safari:
+            return [
+                WikiShortcut(keys: "⌘ T", action: "Open new tab"),
+                WikiShortcut(keys: "⌘ N", action: "Open new window"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "Open private window"),
+                WikiShortcut(keys: "⌘ L", action: "Open Location (URL bar)"),
+                WikiShortcut(keys: "⌘ W", action: "Close tab"),
+                WikiShortcut(keys: "⌘ ⇧ T", action: "Reopen last closed tab"),
+                WikiShortcut(keys: "⌘ R", action: "Reload page"),
+                WikiShortcut(keys: "⌘ [", action: "Go back"),
+                WikiShortcut(keys: "⌘ ]", action: "Go forward"),
+            ]
+        case .notes:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New note"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "New folder"),
+                WikiShortcut(keys: "⌘ ⇧ T", action: "Format as Title"),
+                WikiShortcut(keys: "⌘ ⇧ H", action: "Format as Heading"),
+                WikiShortcut(keys: "⌘ ⇧ L", action: "Toggle Checklist"),
+                WikiShortcut(keys: "⌘ F", action: "Search in note"),
+                WikiShortcut(keys: "⌥ ⌘ F", action: "Search all notes"),
+            ]
+        case .calendar:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New event"),
+                WikiShortcut(keys: "⌘ T", action: "Go to Today"),
+                WikiShortcut(keys: "⌘ 1", action: "Day view"),
+                WikiShortcut(keys: "⌘ 2", action: "Week view"),
+                WikiShortcut(keys: "⌘ 3", action: "Month view"),
+                WikiShortcut(keys: "⌘ 4", action: "Year view"),
+                WikiShortcut(keys: "⌘ R", action: "Refresh calendars"),
+            ]
+        case .messages:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New conversation"),
+                WikiShortcut(keys: "⌘ R", action: "Reply to last message"),
+                WikiShortcut(keys: "⌘ ⇧ U", action: "Mark as Unread"),
+                WikiShortcut(keys: "⌃ Tab", action: "Next conversation"),
+                WikiShortcut(keys: "⌃ ⇧ Tab", action: "Previous conversation"),
+            ]
+        default:
+            return []
         }
     }
 }
