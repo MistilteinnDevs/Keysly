@@ -257,7 +257,7 @@ struct AssignmentPromptView: View {
                 .font(.caption)
                 .foregroundStyle(textSecondary)
             
-            TextField("https://example.com", text: $urlString)
+            TextField("https://", text: $urlString)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
                 .padding(12)
