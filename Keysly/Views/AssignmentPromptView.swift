@@ -13,22 +13,34 @@ struct AssignmentPromptView: View {
     @State private var scriptContent: String = ""
     @State private var scriptType: ScriptType = .shell
     @State private var selectedSystemAction: SystemActionType = .toggleDarkMode
+    @State private var selectedShortcutName: String?
     @State private var didInitialize = false
     
-    // Dark theme colors
-    private let bgPrimary = Color(red: 0.08, green: 0.08, blue: 0.10)
-    private let bgSecondary = Color(red: 0.12, green: 0.12, blue: 0.14)
-    private let bgTertiary = Color(red: 0.16, green: 0.16, blue: 0.18)
-    private let accentColor = Color(red: 0.4, green: 0.6, blue: 1.0)
-    private let textPrimary = Color.white
-    private let textSecondary = Color(white: 0.6)
-    private let textTertiary = Color(white: 0.4)
+    // White & Orange Theme Colors
+    private let bgPrimary = Color(hex: 0xFFFFFF)
+    private let bgSecondary = Color(hex: 0xF5F5F7)
+    private let bgTertiary = Color(hex: 0xE5E5EB)
+    private let accentColor = Color(hex: 0xFF9500)
+    private let textPrimary = Color(hex: 0x000000)
+    private let textSecondary = Color(hex: 0x6E6E73)
+    private let textTertiary = Color(hex: 0x8E8E93)
     
     enum ActionType: String, CaseIterable {
         case app = "App"
         case url = "URL"
         case script = "Script"
         case system = "System"
+        case shortcut = "Shortcut"
+        
+        var icon: String {
+            switch self {
+            case .app: return "app.dashed"
+            case .url: return "globe"
+            case .script: return "terminal"
+            case .system: return "gearshape"
+            case .shortcut: return "bolt.fill"
+            }
+        }
     }
     
     var body: some View {
@@ -36,72 +48,96 @@ struct AssignmentPromptView: View {
             bgPrimary.ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 20) {
-                    // Key combo display
+                // Header (Key Combo)
+                VStack(spacing: 16) {
                     HStack(spacing: 6) {
                         ForEach(keyComboKeys, id: \.self) { key in
                             Text(key)
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(.system(size: 18, weight: .bold, design: .rounded))
                                 .foregroundStyle(accentColor)
-                                .frame(minWidth: 32, minHeight: 32)
-                                .background(accentColor.opacity(0.15))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .frame(minWidth: 40, minHeight: 40)
+                                .background(accentColor.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(accentColor.opacity(0.2), lineWidth: 1)
+                                )
                         }
                     }
                     
                     Text(editingShortcut != nil ? "Edit Action" : "Assign Action")
-                        .font(.callout)
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(textSecondary)
                 }
-                .padding(.top, 32)
-                .padding(.bottom, 24)
+                .padding(.top, 40)
+                .padding(.bottom, 32)
                 
-                Rectangle()
-                    .fill(bgTertiary)
-                    .frame(height: 1)
-                
-                // Action type picker
-                VStack(spacing: 20) {
-                    HStack(spacing: 0) {
+                // Central Type Selection
+                VStack(spacing: 24) {
+                    HStack(spacing: 12) {
                         ForEach(ActionType.allCases, id: \.self) { type in
                             Button {
-                                selectedActionType = type
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedActionType = type
+                                }
                             } label: {
-                                Text(type.rawValue)
-                                    .font(.caption.weight(.medium))
-                                    .foregroundStyle(selectedActionType == type ? textPrimary : textTertiary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                                    .background(selectedActionType == type ? bgTertiary : .clear)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                VStack(spacing: 12) {
+                                    Image(systemName: type.icon)
+                                        .font(.system(size: 26)) // Larger icon
+                                        .foregroundStyle(selectedActionType == type ? accentColor : textSecondary)
+                                    
+                                    Text(type.rawValue)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(selectedActionType == type ? textPrimary : textSecondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 90) // Taller card
+                                .background(selectedActionType == type ? Color.white : bgSecondary)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(selectedActionType == type ? accentColor : Color.clear, lineWidth: 2)
+                                )
+                                .shadow(
+                                    color: selectedActionType == type ? accentColor.opacity(0.3) : Color.black.opacity(0.05),
+                                    radius: selectedActionType == type ? 8 : 2,
+                                    y: selectedActionType == type ? 4 : 1
+                                )
                             }
                             .buttonStyle(.plain)
+                            .scaleEffect(selectedActionType == type ? 1.02 : 1.0) // Subtle scale up
                         }
                     }
-                    .padding(4)
-                    .background(bgSecondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.horizontal, 24)
                     
-                    // Configuration
-                    actionConfiguration
-                        .frame(height: 100)
+                    // Selected Content Area
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 24) {
+                            Text(selectedActionType.rawValue)
+                                .font(.title3) // Larger title
+                                .fontWeight(.bold)
+                                .foregroundStyle(textPrimary)
+                            
+                            actionConfiguration
+                        }
+                        .padding(.vertical, 16)
+                    }
+                    .padding(.horizontal, 24)
                 }
-                .padding(24)
                 
                 Spacer()
                 
                 // Footer
-                Rectangle()
-                    .fill(bgTertiary)
-                    .frame(height: 1)
-                
                 HStack {
                     Button("Cancel") {
                         onCancel()
                     }
-                    .buttonStyle(.bordered)
-                    .tint(.gray)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(textSecondary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(bgSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                     .keyboardShortcut(.escape, modifiers: [])
                     
                     Spacer()
@@ -111,11 +147,11 @@ struct AssignmentPromptView: View {
                             onSave(action)
                         }
                     } label: {
-                        Text(editingShortcut != nil ? "Update" : "Save")
-                            .font(.callout.weight(.medium))
+                        Text(editingShortcut != nil ? "Update Action" : "Save Action")
+                            .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 10)
                             .background(canSave ? accentColor : accentColor.opacity(0.3))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
@@ -123,10 +159,12 @@ struct AssignmentPromptView: View {
                     .disabled(!canSave)
                     .keyboardShortcut(.return, modifiers: .command)
                 }
-                .padding(20)
+                .padding(24)
+                .background(bgPrimary)
+                .overlay(Rectangle().fill(bgTertiary).frame(height: 1), alignment: .top)
             }
         }
-        .preferredColorScheme(.dark)
+        // Removed fixed frame to allow full expansion in content area
         .onAppear {
             initializeFromEditing()
         }
@@ -167,6 +205,9 @@ struct AssignmentPromptView: View {
         case .systemAction(let type):
             selectedActionType = .system
             selectedSystemAction = type
+        case .runShortcut(let name):
+            selectedActionType = .shortcut
+            selectedShortcutName = name
         case .chain:
             selectedActionType = .app
         }
@@ -185,12 +226,24 @@ struct AssignmentPromptView: View {
             scriptInput
         case .system:
             systemActionPicker
+        case .shortcut:
+            shortcutPicker
         }
     }
     
     private var appPicker: some View {
         AppPickerButton(
             selectedApp: $selectedApp,
+            bgSecondary: bgSecondary,
+            bgTertiary: bgTertiary,
+            textPrimary: textPrimary,
+            textSecondary: textSecondary
+        )
+    }
+    
+    private var shortcutPicker: some View {
+        ShortcutPickerButton(
+            selectedShortcut: $selectedShortcutName,
             bgSecondary: bgSecondary,
             bgTertiary: bgTertiary,
             textPrimary: textPrimary,
@@ -206,57 +259,82 @@ struct AssignmentPromptView: View {
             
             TextField("https://example.com", text: $urlString)
                 .textFieldStyle(.plain)
-                .font(.callout)
+                .font(.system(size: 14))
                 .padding(12)
-                .background(bgSecondary)
+                .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(bgTertiary, lineWidth: 1)
+                )
         }
     }
     
     private var scriptInput: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             HStack(spacing: 0) {
                 ForEach(ScriptType.allCases, id: \.self) { type in
                     Button {
                         scriptType = type
                     } label: {
                         Text(type.rawValue)
-                            .font(.caption2.weight(.medium))
-                            .foregroundStyle(scriptType == type ? textPrimary : textTertiary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(scriptType == type ? bgTertiary : .clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(scriptType == type ? textPrimary : textSecondary)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(scriptType == type ? Color.white : bgSecondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .shadow(color: scriptType == type ? Color.black.opacity(0.05) : .clear, radius: 2)
                     }
                     .buttonStyle(.plain)
                 }
+                Spacer()
             }
-            .padding(3)
+            .padding(4)
             .background(bgSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
             
             TextEditor(text: $scriptContent)
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 12, design: .monospaced))
                 .scrollContentBackground(.hidden)
-                .padding(8)
-                .background(bgSecondary)
+                .padding(12)
+                .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(bgTertiary, lineWidth: 1)
+                )
+                .frame(minHeight: 120)
         }
     }
     
     private var systemActionPicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("System Action")
-                .font(.caption)
-                .foregroundStyle(textSecondary)
-            
-            Picker("", selection: $selectedSystemAction) {
-                ForEach(SystemActionType.allCases, id: \.self) { type in
-                    Label(type.rawValue, systemImage: type.iconName).tag(type)
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
+            ForEach(SystemActionType.allCases, id: \.self) { type in
+                Button {
+                    selectedSystemAction = type
+                } label: {
+                    VStack(spacing: 8) {
+                        Image(systemName: type.iconName)
+                            .font(.system(size: 20))
+                            .foregroundStyle(selectedSystemAction == type ? accentColor : textSecondary)
+                        
+                        Text(type.rawValue)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(selectedSystemAction == type ? textPrimary : textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 80)
+                    .background(selectedSystemAction == type ? Color.white : Color.white.opacity(0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(selectedSystemAction == type ? accentColor : bgTertiary, lineWidth: selectedSystemAction == type ? 2 : 1)
+                    )
                 }
+                .buttonStyle(.plain)
             }
-            .labelsHidden()
-            .pickerStyle(.menu)
         }
     }
     
@@ -268,6 +346,7 @@ struct AssignmentPromptView: View {
         case .url: return URL(string: urlString) != nil && urlString.count > 8
         case .script: return !scriptContent.isEmpty
         case .system: return true
+        case .shortcut: return selectedShortcutName != nil
         }
     }
     
@@ -283,9 +362,127 @@ struct AssignmentPromptView: View {
             return .runInlineScript(script: scriptContent, type: scriptType)
         case .system:
             return .systemAction(selectedSystemAction)
+        case .shortcut:
+            guard let shortcut = selectedShortcutName else { return nil }
+            return .runShortcut(name: shortcut)
         }
     }
 }
+
+// MARK: - Shortcut Selection Grid
+
+struct ShortcutPickerButton: View {
+    @Binding var selectedShortcut: String?
+    let bgSecondary: Color
+    let bgTertiary: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    
+    @State private var shortcuts: [String] = []
+    @State private var searchText = ""
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    
+    let columns = [GridItem(.adaptive(minimum: 150), spacing: 12)]
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Search Bar
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(textSecondary)
+                TextField("Search shortcuts...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 14))
+            }
+            .padding(12)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(bgTertiary, lineWidth: 1)
+            )
+            
+            if isLoading {
+                ProgressView()
+                    .padding()
+            } else if let error = errorMessage {
+                Text(error)
+                    .foregroundStyle(.red)
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 12) {
+                        ForEach(filteredShortcuts, id: \.self) { shortcut in
+                            Button {
+                                selectedShortcut = shortcut
+                            } label: {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Image(systemName: "bolt.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(selectedShortcut == shortcut ? .white : .purple)
+                                        .padding(8)
+                                        .background(selectedShortcut == shortcut ? .white.opacity(0.2) : .purple.opacity(0.1))
+                                        .clipShape(Circle())
+                                    
+                                    Text(shortcut)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(selectedShortcut == shortcut ? .white : textPrimary)
+                                        .lineLimit(2)
+                                        .multilineTextAlignment(.leading)
+                                    
+                                    Spacer(minLength: 0)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(height: 100)
+                                .padding(12)
+                                .background(selectedShortcut == shortcut ? Color(hex: 0xFF9500) : Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(selectedShortcut == shortcut ? Color.clear : bgTertiary, lineWidth: 1)
+                                )
+                                .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(4)
+                }
+                .frame(maxHeight: 300) // Limit height
+            }
+        }
+        .onAppear {
+            loadShortcuts()
+        }
+    }
+    
+    private var filteredShortcuts: [String] {
+        if searchText.isEmpty { return shortcuts }
+        return shortcuts.filter { $0.localizedCaseInsensitiveContains(searchText) }
+    }
+    
+    private func loadShortcuts() {
+        guard shortcuts.isEmpty else { return }
+        isLoading = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let fetchedShortcuts = try await ShortcutsService.shared.listShortcuts()
+                await MainActor.run {
+                    self.shortcuts = fetchedShortcuts
+                    self.isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                    self.isLoading = false
+                }
+            }
+        }
+    }
+}
+
 
 // MARK: - App Info
 
@@ -332,7 +529,7 @@ struct AppPickerButton: View {
                         if let icon = app.icon {
                             Image(nsImage: icon)
                                 .resizable()
-                                .frame(width: 22, height: 22)
+                                .frame(width: 20, height: 20)
                         }
                         Text(app.name)
                             .foregroundStyle(textPrimary)
@@ -348,8 +545,12 @@ struct AppPickerButton: View {
                         .foregroundStyle(textSecondary)
                 }
                 .padding(12)
-                .background(bgSecondary)
+                .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(bgTertiary, lineWidth: 1)
+                )
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showingPicker) {
@@ -376,6 +577,7 @@ struct AppPickerButton: View {
                                         Text(app.name)
                                             .font(.callout)
                                             .lineLimit(1)
+                                            .foregroundStyle(.primary)
                                         Spacer()
                                     }
                                     .padding(.horizontal, 14)

@@ -30,6 +30,9 @@ actor ActionExecutor: ActionExecutorProtocol {
         case .systemAction(let actionType):
             try await executeSystemAction(actionType)
             
+        case .runShortcut(let name):
+            try await ShortcutsService.shared.run(shortcut: name)
+            
         case .chain(let actions):
             for action in actions {
                 try await execute(action)
@@ -139,18 +142,18 @@ actor ActionExecutor: ActionExecutorProtocol {
             try await runShellScript("open -a ScreenSaverEngine")
             
         case .logout:
-            // Use osascript with Finder (more reliable)
-            try await runShellScript("osascript -e 'tell application \"System Events\" to log out'")
+            // Use osascript with System Events (more reliable)
+            try await runShellScript("osascript -e 'tell application id \"com.apple.systemevents\" to log out'")
             
         case .toggleDarkMode:
-            // Use osascript via shell (bypasses some permission issues)
+            // Use osascript via shell
             try await runShellScript("""
-                osascript -e 'tell app "System Events" to tell appearance preferences to set dark mode to not dark mode'
+                osascript -e 'tell application id "com.apple.systemevents" to tell appearance preferences to set dark mode to not dark mode'
             """)
             
         case .emptyTrash:
-            // Use osascript with Finder
-            try await runShellScript("osascript -e 'tell application \"Finder\" to empty trash'")
+            // Use osascript with Finder via Bundle ID to avoid -600 errors
+            try await runShellScript("osascript -e 'tell application id \"com.apple.finder\" to empty trash'")
             
         case .showDesktop:
             // Use F11 key simulation or Expose

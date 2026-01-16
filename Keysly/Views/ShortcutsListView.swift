@@ -3,145 +3,184 @@ import SwiftUI
 struct ShortcutsListView: View {
     
     @Environment(AppState.self) private var appState
+    
+    // Theme Colors passed from parent
+    let bgSecondary: Color
+    let bgTertiary: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let accentColor: Color
+    
+    var onEdit: (Shortcut) -> Void
+    var onDelete: (Shortcut) -> Void
+    
     @State private var searchText = ""
-    @State private var selectedShortcut: Shortcut?
-    @State private var showingDeleteConfirmation = false
+    @State private var hoveredShortcutId: String?
     
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
-            searchBar
-            
-            Divider()
-            
-            // Shortcuts list
-            if filteredShortcuts.isEmpty {
-                emptyState
-            } else {
-                shortcutsList
+            // Search Bar
+            if !appState.shortcutStore.shortcuts.isEmpty {
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14))
+                        .foregroundStyle(textSecondary)
+                    
+                    TextField("Search...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .font(.subheadline)
+                        .foregroundStyle(textPrimary)
+                }
+                .padding(12)
+                .background(bgSecondary)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
             }
-        }
-    }
-    
-    // MARK: - Search Bar
-    
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
             
-            TextField("Search shortcuts...", text: $searchText)
-                .textFieldStyle(.plain)
-        }
-        .padding(12)
-    }
-    
-    // MARK: - Empty State
-    
-    private var emptyState: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "keyboard")
-                .font(.system(size: 48))
-                .foregroundStyle(.tertiary)
-            
-            if searchText.isEmpty {
-                Text("No shortcuts yet")
-                    .font(.headline)
-                Text("Press any key combo anywhere to create your first shortcut.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-            } else {
-                Text("No matching shortcuts")
-                    .font(.headline)
-                Text("Try a different search term.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-    
-    // MARK: - Shortcuts List
-    
-    private var shortcutsList: some View {
-        List(selection: $selectedShortcut) {
-            ForEach(filteredShortcuts) { shortcut in
-                shortcutRow(shortcut)
-                    .tag(shortcut)
-                    .contextMenu {
-                        Button("Delete", role: .destructive) {
-                            appState.shortcutStore.deleteShortcut(id: shortcut.id)
-                        }
+            // List
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(filteredShortcuts) { shortcut in
+                        ShortcutCard(
+                            shortcut: shortcut,
+                            bgSecondary: bgSecondary,
+                            bgTertiary: bgTertiary,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                            accentColor: accentColor,
+                            onEdit: { onEdit(shortcut) },
+                            onDelete: { onDelete(shortcut) }
+                        )
                     }
-            }
-            .onDelete { indexSet in
-                for index in indexSet {
-                    let shortcut = filteredShortcuts[index]
-                    appState.shortcutStore.deleteShortcut(id: shortcut.id)
                 }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
             }
         }
-        .listStyle(.inset)
     }
-    
-    private func shortcutRow(_ shortcut: Shortcut) -> some View {
-        HStack(spacing: 12) {
-            // Key combo badge
-            Text(shortcut.keyCombo.displayString)
-                .font(.system(.body, design: .monospaced))
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.quaternary)
-                .clipShape(RoundedRectangle(cornerRadius: 4))
-            
-            // Action info
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Image(systemName: shortcut.action.iconName)
-                        .foregroundStyle(.secondary)
-                    Text(shortcut.action.displayName)
-                }
-                
-                if let contextApp = shortcut.contextAppBundleId {
-                    Text("In: \(contextApp)")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                } else {
-                    Text("Global")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-            
-            Spacer()
-            
-            // Stats
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("×\(shortcut.useCount)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                
-                if let lastUsed = shortcut.lastUsedAt {
-                    Text(lastUsed, style: .relative)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
-        }
-        .padding(.vertical, 4)
-    }
-    
-    // MARK: - Filtering
     
     private var filteredShortcuts: [Shortcut] {
         appState.shortcutStore.search(query: searchText)
     }
 }
 
-#Preview {
-    ShortcutsListView()
-        .environment(AppState())
-        .frame(width: 500, height: 400)
+struct ShortcutCard: View {
+    let shortcut: Shortcut
+    let bgSecondary: Color
+    let bgTertiary: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let accentColor: Color
+    
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon
+            iconView
+                .font(.system(size: 18))
+                .frame(width: 24)
+            
+            // Info
+            Text(shortcut.action.displayName)
+                .font(.system(size: 13))
+                .foregroundStyle(textPrimary)
+            
+            Spacer()
+            
+            // Actions (Only visible on hover)
+            if isHovered {
+                HStack(spacing: 8) {
+                    Button(action: onEdit) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12))
+                            .foregroundStyle(textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12))
+                            .foregroundStyle(textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .transition(.opacity)
+            }
+            
+            // Key Combo
+            HStack(spacing: 4) {
+                keyBadges
+            }
+            .opacity(isHovered ? 1 : 0.7)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? bgSecondary : Color.clear)
+        )
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var iconView: some View {
+        switch shortcut.action {
+        case .launchApp(let bundleId, _):
+            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                    .resizable()
+                    .frame(width: 18, height: 18)
+            } else {
+                Image(systemName: "app")
+                    .foregroundStyle(textSecondary)
+            }
+        case .runShortcut:
+            Image(systemName: "bolt")
+                .foregroundStyle(textSecondary)
+        case .openURL:
+            Image(systemName: "globe")
+                .foregroundStyle(textSecondary)
+        case .systemAction:
+            Image(systemName: "macwindow")
+                .foregroundStyle(textSecondary)
+        default:
+            Image(systemName: "command")
+                .foregroundStyle(textSecondary)
+        }
+    }
+    
+    private var keyBadges: some View {
+        ForEach(shortcut.keyCombo.keyStrings, id: \.self) { key in
+            Text(key)
+                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .foregroundStyle(textSecondary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(bgTertiary)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
+    }
+}
+
+// Helper for splitting key combo
+extension KeyCombo {
+    var keyStrings: [String] {
+        var keys: [String] = []
+        if modifiers.contains(.control) { keys.append("⌃") }
+        if modifiers.contains(.option) { keys.append("⌥") }
+        if modifiers.contains(.shift) { keys.append("⇧") }
+        if modifiers.contains(.command) { keys.append("⌘") }
+        keys.append(keyString.uppercased())
+        return keys
+    }
 }

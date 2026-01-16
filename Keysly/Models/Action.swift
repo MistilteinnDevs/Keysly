@@ -44,6 +44,7 @@ enum Action: Codable, Hashable, Sendable {
     case runScript(path: String, type: ScriptType)
     case runInlineScript(script: String, type: ScriptType)
     case systemAction(SystemActionType)
+    case runShortcut(name: String)
     case chain([Action])
     
     var displayName: String {
@@ -53,6 +54,7 @@ enum Action: Codable, Hashable, Sendable {
         case .runScript(let path, _): return "Run \(URL(fileURLWithPath: path).lastPathComponent)"
         case .runInlineScript(_, let type): return "Run \(type.rawValue)"
         case .systemAction(let type): return type.rawValue
+        case .runShortcut(let name): return "Shortcut: \(name)"
         case .chain(let actions): return "\(actions.count) actions"
         }
     }
@@ -63,6 +65,7 @@ enum Action: Codable, Hashable, Sendable {
         case .openURL: return "globe"
         case .runScript, .runInlineScript: return "terminal.fill"
         case .systemAction(let type): return type.iconName
+        case .runShortcut: return "bolt.fill"
         case .chain: return "link"
         }
     }

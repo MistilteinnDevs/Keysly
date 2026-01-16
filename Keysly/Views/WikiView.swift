@@ -1,212 +1,220 @@
 import SwiftUI
 
-struct WikiView: View {
+struct WikiContentView: View {
+    let bgSecondary: Color
+    let bgTertiary: Color
+    let accentColor: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    
     @State private var searchText = ""
     @State private var selectedCategory: ShortcutCategory = .common
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            header
-            
-            Divider()
+        HStack(spacing: 0) {
+            // Sidebar
+            VStack(spacing: 0) {
+                // Search in Sidebar
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14))
+                        .foregroundStyle(textSecondary)
+                    TextField("Search", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .foregroundStyle(textPrimary)
+                }
+                .padding(8)
+                .background(Color.white)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                )
+                .padding(12)
+                
+                ScrollView {
+                    LazyVStack(spacing: 4) {
+                        ForEach(ShortcutCategory.allCases, id: \.self) { category in
+                            Button {
+                                selectedCategory = category
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: category.icon)
+                                        .font(.system(size: 14))
+                                        .frame(width: 20)
+                                        .foregroundStyle(selectedCategory == category ? .white : textPrimary)
+                                    Text(category.title)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(selectedCategory == category ? .white : textPrimary)
+                                        .multilineTextAlignment(.leading)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(selectedCategory == category ? accentColor : .clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
+                }
+            }
+            .frame(width: 220) // Slightly wider for search bar
+            .background(bgSecondary.opacity(0.5))
+            .overlay(
+                Rectangle()
+                    .fill(Color.black.opacity(0.05))
+                    .frame(width: 1),
+                alignment: .trailing
+            )
             
             // Content
-            HStack(spacing: 0) {
-                // Sidebar
-                categorySidebar
-                    .frame(width: 160)
-                
-                Divider()
-                
-                // Shortcuts list
-                shortcutsList
-            }
-        }
-        .frame(width: 700, height: 500)
-        .background(Color(nsColor: .windowBackgroundColor))
-    }
-    
-    // MARK: - Header
-    
-    private var header: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "book.fill")
-                .font(.title3)
-                .foregroundStyle(.purple)
-            
-            Text("macOS Shortcuts Wiki")
-                .font(.headline)
-            
-            Spacer()
-            
-            // Search
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                TextField("Search shortcuts...", text: $searchText)
-                    .textFieldStyle(.plain)
-            }
-            .padding(8)
-            .frame(width: 200)
-            .background(.quaternary)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-    }
-    
-    // MARK: - Sidebar
-    
-    private var categorySidebar: some View {
-        ScrollView {
-            LazyVStack(spacing: 2) {
-                ForEach(ShortcutCategory.allCases, id: \.self) { category in
-                    Button {
-                        selectedCategory = category
-                    } label: {
-                        HStack {
-                            Image(systemName: category.icon)
-                                .frame(width: 20)
-                                .foregroundStyle(selectedCategory == category ? .white : .secondary)
-                            Text(category.title)
-                                .font(.callout)
-                                .foregroundStyle(selectedCategory == category ? .white : .primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(selectedCategory == category ? .blue : .clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(8)
-        }
-    }
-    
-    // MARK: - Shortcuts List
-    
-    private var shortcutsList: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 16) {
-                // Category header
-                VStack(alignment: .leading, spacing: 4) {
+            VStack(spacing: 0) {
+                // Toolbar (Just Title now)
+                HStack {
                     Text(selectedCategory.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    Text(selectedCategory.description)
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundStyle(textPrimary)
+                    
+                    Spacer()
                 }
-                .padding(.bottom, 8)
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 24)
                 
-                // Shortcuts
-                ForEach(filteredShortcuts, id: \.keys) { shortcut in
-                    shortcutRow(shortcut)
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        Text(selectedCategory.description)
+                            .font(.system(size: 16))
+                            .foregroundStyle(textSecondary)
+                            .padding(.bottom, 24)
+                        
+                        ForEach(filteredShortcuts, id: \.keys) { shortcut in
+                            WikiShortcutRow(
+                                shortcut: shortcut,
+                                bgTertiary: bgTertiary,
+                                textPrimary: textPrimary,
+                                textSecondary: textSecondary,
+                                accentColor: accentColor
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 40)
+                    .padding(.bottom, 40)
                 }
             }
-            .padding(20)
         }
     }
     
     private var filteredShortcuts: [WikiShortcut] {
         let categoryShortcuts = WikiData.shortcuts(for: selectedCategory)
-        if searchText.isEmpty {
-            return categoryShortcuts
-        }
+        if searchText.isEmpty { return categoryShortcuts }
         return categoryShortcuts.filter {
             $0.keys.localizedCaseInsensitiveContains(searchText) ||
             $0.action.localizedCaseInsensitiveContains(searchText)
         }
     }
+}
+
+struct WikiShortcutRow: View {
+    let shortcut: WikiShortcut
+    let bgTertiary: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let accentColor: Color
     
-    private func shortcutRow(_ shortcut: WikiShortcut) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            // Keys - use indices to avoid duplicate ID warning
-            HStack(spacing: 3) {
-                ForEach(Array(shortcut.keyParts.enumerated()), id: \.offset) { index, part in
+    var body: some View {
+        HStack(alignment: .top, spacing: 24) {
+            // Keys
+            HStack(spacing: 4) {
+                ForEach(Array(shortcut.keyParts.enumerated()), id: \.offset) { _, part in
                     if part == "+" {
                         Text("+")
                             .font(.caption)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(textSecondary)
                     } else {
                         Text(part)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(.purple)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 4)
-                            .background(.purple.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(accentColor)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(accentColor.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(accentColor.opacity(0.2), lineWidth: 1)
+                            )
                     }
                 }
             }
-            .frame(minWidth: 140, alignment: .leading)
+            .frame(minWidth: 160, alignment: .leading) // More breathing room for keys
             
-            // Description
             Text(shortcut.action)
-                .font(.callout)
-                .foregroundStyle(.primary)
+                .font(.system(size: 15)) // Larger font
+                .foregroundStyle(textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 6)
             
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(16) // Increased padding
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(bgTertiary.opacity(0.5))
+        )
     }
 }
 
 // MARK: - Data Models
 
 enum ShortcutCategory: String, CaseIterable {
-    case common
-    case copyPaste
-    case window
-    case navigation
-    case screenshot
-    case finder
-    case documents
-    case system
-    case special
+    case common, copyPaste, window, app, navigation, screenshot, finder, documents, system, input
     
     var title: String {
         switch self {
-        case .common: return "Common"
+        case .common: return "Common & Search"
         case .copyPaste: return "Copy & Paste"
         case .window: return "Windows"
+        case .app: return "Applications"
         case .navigation: return "Navigation"
         case .screenshot: return "Screenshots"
         case .finder: return "Finder"
         case .documents: return "Documents"
-        case .system: return "System"
-        case .special: return "Special Characters"
+        case .system: return "System & Power"
+        case .input: return "Input & Special"
         }
     }
     
     var icon: String {
         switch self {
-        case .common: return "star.fill"
+        case .common: return "star"
         case .copyPaste: return "doc.on.doc"
         case .window: return "macwindow"
-        case .navigation: return "arrow.left.arrow.right"
+        case .app: return "app.dashed"
+        case .navigation: return "arrow.up.left.and.arrow.down.right"
         case .screenshot: return "camera.viewfinder"
         case .finder: return "folder"
         case .documents: return "doc.text"
-        case .system: return "gearshape"
-        case .special: return "character.textbox"
+        case .system: return "power"
+        case .input: return "keyboard"
         }
     }
     
     var description: String {
         switch self {
-        case .common: return "Frequently used shortcuts that work across most apps"
-        case .copyPaste: return "Cut, copy, paste, and clipboard operations"
-        case .window: return "Managing windows and switching between apps"
-        case .navigation: return "Moving around in documents and text"
-        case .screenshot: return "Capture your screen in various ways"
-        case .finder: return "File management and Finder navigation"
-        case .documents: return "Text editing and document operations"
-        case .system: return "System controls, sleep, and power options"
-        case .special: return "Type special characters and symbols"
+        case .common: return "Essential searching and common operations."
+        case .copyPaste: return "Clipboard, undo/redo, and style matching."
+        case .window: return "Switching, minimizing, and hiding windows."
+        case .app: return "Quit, force quit, and app preferences."
+        case .navigation: return "Moving cursor and scrolling pages."
+        case .screenshot: return "Capturing screens, windows, and recordings."
+        case .finder: return "File management and Finder navigation."
+        case .documents: return "Text manipulation, alignment, and editing."
+        case .system: return "Sleep, restart, logout, and power options."
+        case .input: return "Accents, emoji, and special characters."
         }
     }
 }
@@ -226,27 +234,18 @@ struct WikiShortcut {
     }
 }
 
-// MARK: - Wiki Data
-
 struct WikiData {
     static func shortcuts(for category: ShortcutCategory) -> [WikiShortcut] {
         switch category {
         case .common:
             return [
-                WikiShortcut(keys: "⌘ Space", action: "Spotlight: Show or hide the search field"),
                 WikiShortcut(keys: "⌘ F", action: "Find: Open a Find window, or find items in a document"),
                 WikiShortcut(keys: "⌘ G", action: "Find Again: Find the next occurrence"),
                 WikiShortcut(keys: "⌘ ⇧ G", action: "Find Previous: Find the previous occurrence"),
                 WikiShortcut(keys: "⌘ E", action: "Find Selection: Search for the selected text"),
-                WikiShortcut(keys: "⌘ N", action: "New: Open a new document or window"),
-                WikiShortcut(keys: "⌘ O", action: "Open: Open the selected item or a file dialog"),
-                WikiShortcut(keys: "⌘ S", action: "Save the current document"),
-                WikiShortcut(keys: "⌘ P", action: "Print the current document"),
-                WikiShortcut(keys: "⌘ W", action: "Close the front window"),
-                WikiShortcut(keys: "⌘ Q", action: "Quit the app"),
-                WikiShortcut(keys: "⌘ ,", action: "Preferences: Open preferences for the app"),
+                WikiShortcut(keys: "⌘ Space", action: "Spotlight: Show or hide the Spotlight search field"),
+                WikiShortcut(keys: "⌥ Space", action: "Show Finder search window"),
             ]
-            
         case .copyPaste:
             return [
                 WikiShortcut(keys: "⌘ A", action: "Select All items"),
@@ -254,16 +253,15 @@ struct WikiData {
                 WikiShortcut(keys: "⌘ C", action: "Copy the selected item to the Clipboard"),
                 WikiShortcut(keys: "⌘ V", action: "Paste the contents of the Clipboard"),
                 WikiShortcut(keys: "⌘ ⇧ ⌥ V", action: "Paste and Match Style: Paste without formatting"),
-                WikiShortcut(keys: "⌘ ⌥ C", action: "Copy Style: Copy the formatting settings"),
-                WikiShortcut(keys: "⌘ ⌥ V", action: "Paste Style: Apply the copied style"),
+                WikiShortcut(keys: "⌘ ⌥ C", action: "Copy Style: Copy formatting settings"),
+                WikiShortcut(keys: "⌘ ⌥ V", action: "Paste Style: Apply copied style"),
                 WikiShortcut(keys: "⌘ Z", action: "Undo the previous command"),
                 WikiShortcut(keys: "⌘ ⇧ Z", action: "Redo: Reverse the undo command"),
             ]
-            
         case .window:
             return [
-                WikiShortcut(keys: "⌘ Tab", action: "Switch apps: Switch to the next most recently used app"),
-                WikiShortcut(keys: "⌘ `", action: "Switch windows: Switch between windows of the front app"),
+                WikiShortcut(keys: "⌘ Tab", action: "Switch apps: Next most recently used app"),
+                WikiShortcut(keys: "⌘ `", action: "Switch windows: Next window of front app"),
                 WikiShortcut(keys: "⌘ ⇧ `", action: "Switch windows (reverse direction)"),
                 WikiShortcut(keys: "⌘ H", action: "Hide the windows of the front app"),
                 WikiShortcut(keys: "⌘ ⌥ H", action: "Hide all other apps"),
@@ -271,115 +269,93 @@ struct WikiData {
                 WikiShortcut(keys: "⌘ ⌥ M", action: "Minimize all windows of the front app"),
                 WikiShortcut(keys: "⌘ W", action: "Close the front window"),
                 WikiShortcut(keys: "⌘ ⌥ W", action: "Close all windows of the app"),
+                WikiShortcut(keys: "⌃ F4", action: "Change focus to active or next window"),
+            ]
+        case .app:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New: Open a new document or window"),
+                WikiShortcut(keys: "⌘ O", action: "Open: Open the selected item or dialog"),
+                WikiShortcut(keys: "⌘ S", action: "Save the current document"),
+                WikiShortcut(keys: "⌘ P", action: "Print the current document"),
+                WikiShortcut(keys: "⌘ Q", action: "Quit the app"),
                 WikiShortcut(keys: "⌘ ⌥ Esc", action: "Force Quit: Choose an app to force quit"),
+                WikiShortcut(keys: "⌘ ,", action: "Preferences: Open app preferences"),
+                WikiShortcut(keys: "⌘ ⇧ ?", action: "Open the Help menu"),
+                WikiShortcut(keys: "⌘ ⌥ T", action: "Show or hide a toolbar"),
             ]
-            
-        case .navigation:
+        case .input:
             return [
-                WikiShortcut(keys: "⌃ A", action: "Move to the beginning of the line"),
-                WikiShortcut(keys: "⌃ E", action: "Move to the end of a line"),
-                WikiShortcut(keys: "⌃ F", action: "Move one character forward"),
-                WikiShortcut(keys: "⌃ B", action: "Move one character backward"),
-                WikiShortcut(keys: "⌃ P", action: "Move up one line"),
-                WikiShortcut(keys: "⌃ N", action: "Move down one line"),
-                WikiShortcut(keys: "⌘ ↑", action: "Move to the beginning of the document"),
-                WikiShortcut(keys: "⌘ ↓", action: "Move to the end of the document"),
-                WikiShortcut(keys: "⌘ ←", action: "Move to the beginning of the current line"),
-                WikiShortcut(keys: "⌘ →", action: "Move to the end of the current line"),
-                WikiShortcut(keys: "⌥ ←", action: "Move to the beginning of the previous word"),
-                WikiShortcut(keys: "⌥ →", action: "Move to the end of the next word"),
-                WikiShortcut(keys: "Fn ↑", action: "Page Up: Scroll up one page"),
-                WikiShortcut(keys: "Fn ↓", action: "Page Down: Scroll down one page"),
-            ]
-            
-        case .screenshot:
-            return [
-                WikiShortcut(keys: "⌘ ⇧ 3", action: "Screenshot of the entire screen"),
-                WikiShortcut(keys: "⌘ ⇧ 4", action: "Screenshot of selection of screen"),
-                WikiShortcut(keys: "⌘ ⇧ 4 Space", action: "Screenshot of a window"),
-                WikiShortcut(keys: "⌘ ⇧ 5", action: "Open Screenshot app with options"),
-                WikiShortcut(keys: "⌘ ⇧ ⌃ 3", action: "Copy screenshot to clipboard"),
-                WikiShortcut(keys: "⌘ ⇧ ⌃ 4", action: "Copy selection screenshot to clipboard"),
-            ]
-            
-        case .finder:
-            return [
-                WikiShortcut(keys: "⌘ N", action: "Open a new Finder window"),
-                WikiShortcut(keys: "⌘ I", action: "Show the Get Info window for a selected file"),
-                WikiShortcut(keys: "⌘ ⇧ N", action: "Create a new folder"),
-                WikiShortcut(keys: "⌘ ⌫", action: "Move the selected item to the Trash"),
-                WikiShortcut(keys: "⌘ ⇧ ⌫", action: "Empty the Trash"),
-                WikiShortcut(keys: "⌘ D", action: "Duplicate the selected files"),
-                WikiShortcut(keys: "⌘ ⇧ C", action: "Open the Computer window"),
-                WikiShortcut(keys: "⌘ ⇧ D", action: "Open the Desktop folder"),
-                WikiShortcut(keys: "⌘ ⇧ H", action: "Open the Home folder"),
-                WikiShortcut(keys: "⌘ ⇧ G", action: "Open a Go to Folder window"),
-                WikiShortcut(keys: "⌘ ⇧ O", action: "Open the Documents folder"),
-                WikiShortcut(keys: "⌘ ⌥ L", action: "Open the Downloads folder"),
-                WikiShortcut(keys: "⌘ ⇧ U", action: "Open the Utilities folder"),
-                WikiShortcut(keys: "⌘ ⇧ R", action: "Open the AirDrop window"),
-                WikiShortcut(keys: "Space", action: "Quick Look: Preview the selected item"),
-                WikiShortcut(keys: "⌘ 1", action: "View as icons"),
-                WikiShortcut(keys: "⌘ 2", action: "View as list"),
-                WikiShortcut(keys: "⌘ 3", action: "View as columns"),
-                WikiShortcut(keys: "⌘ 4", action: "View as gallery"),
-            ]
-            
-        case .documents:
-            return [
-                WikiShortcut(keys: "⌘ B", action: "Bold the selected text"),
-                WikiShortcut(keys: "⌘ I", action: "Italicize the selected text"),
-                WikiShortcut(keys: "⌘ U", action: "Underline the selected text"),
-                WikiShortcut(keys: "⌘ T", action: "Show or hide the Fonts window"),
-                WikiShortcut(keys: "⌘ ⌃ D", action: "Show definition of the selected word"),
-                WikiShortcut(keys: "⌘ ⇧ :", action: "Display Spelling and Grammar window"),
-                WikiShortcut(keys: "⌘ ;", action: "Find misspelled words"),
-                WikiShortcut(keys: "⌘ {", action: "Left align"),
-                WikiShortcut(keys: "⌘ }", action: "Right align"),
-                WikiShortcut(keys: "⌘ ⇧ |", action: "Center align"),
-                WikiShortcut(keys: "⌃ H", action: "Delete character to the left"),
-                WikiShortcut(keys: "⌃ D", action: "Delete character to the right"),
-                WikiShortcut(keys: "⌃ K", action: "Delete to the end of the line"),
-                WikiShortcut(keys: "⌥ ⌫", action: "Delete the word to the left"),
-            ]
-            
-        case .system:
-            return [
-                WikiShortcut(keys: "⌘ ⇧ Q", action: "Log out of user account (with confirmation)"),
-                WikiShortcut(keys: "⌘ ⌃ Q", action: "Lock screen immediately"),
-                WikiShortcut(keys: "⌃ ⌘ ⌽", action: "Force restart"),
-                WikiShortcut(keys: "⇧ ⌃ ⌽", action: "Put displays to sleep"),
-                WikiShortcut(keys: "⌘ ⌃ ⌽", action: "Quit all apps, then restart"),
-                WikiShortcut(keys: "⌘ ⌥ ⌃ ⌽", action: "Quit all apps, then shut down"),
-                WikiShortcut(keys: "⌘ ⌃ Space", action: "Emoji & special character picker"),
-                WikiShortcut(keys: "⌃ ⌥ Space", action: "Switch input source/keyboard"),
+                WikiShortcut(keys: "⌃ ⌘ Space", action: "Emoji and special character picker"),
                 WikiShortcut(keys: "Fn Fn", action: "Start voice dictation"),
-            ]
-            
-        case .special:
-            return [
                 WikiShortcut(keys: "⇧ ⌥ -", action: "Em dash (—)"),
                 WikiShortcut(keys: "⌥ -", action: "En dash (–)"),
                 WikiShortcut(keys: "⌥ ;", action: "Ellipsis (…)"),
-                WikiShortcut(keys: "⌥ [", action: "Opening double quote \\u{201C}"),
-                WikiShortcut(keys: "⇧ ⌥ [", action: "Closing double quote \\u{201D}"),
-                WikiShortcut(keys: "⌥ ]", action: "Opening single quote \\u{2018}"),
-                WikiShortcut(keys: "⇧ ⌥ ]", action: "Closing single quote \\u{2019}"),
-                WikiShortcut(keys: "⌥ G", action: "Copyright symbol (©)"),
-                WikiShortcut(keys: "⌥ R", action: "Registered trademark (®)"),
-                WikiShortcut(keys: "⌥ 2", action: "Trademark symbol (™)"),
-                WikiShortcut(keys: "⇧ ⌥ 2", action: "Euro sign (€)"),
-                WikiShortcut(keys: "⌥ 4", action: "Cent sign (¢)"),
-                WikiShortcut(keys: "⌥ 3", action: "Pound sign (£)"),
-                WikiShortcut(keys: "⌥ Y", action: "Yen sign (¥)"),
-                WikiShortcut(keys: "⌥ 8", action: "Bullet (•)"),
-                WikiShortcut(keys: "⇧ ⌥ 8", action: "Degree symbol (°)"),
-                WikiShortcut(keys: "⌥ S", action: "German sharp S (ß)"),
+                WikiShortcut(keys: "⌥ [", action: "Opening double quote “"),
+                WikiShortcut(keys: "⇧ ⌥ [", action: "Closing double quote ”"),
+                WikiShortcut(keys: "⌥ G", action: "Copyright ©"),
+                WikiShortcut(keys: "⌥ R", action: "Registered ®"),
+                WikiShortcut(keys: "⌥ 2", action: "Trademark ™"),
+                WikiShortcut(keys: "⇧ ⌥ 2", action: "Euro €"),
+                WikiShortcut(keys: "⌥ E", action: "Acute accent (e.g. ´)"),
+                WikiShortcut(keys: "⌥ I", action: "Circumflex accent (e.g. ˆ)"),
+                WikiShortcut(keys: "⌥ U", action: "Umlaut accent (e.g. ¨)"),
             ]
+        case .navigation:
+             return [
+                 WikiShortcut(keys: "Fn ↑", action: "Page Up: Scroll up one page"),
+                 WikiShortcut(keys: "Fn ↓", action: "Page Down: Scroll down one page"),
+                 WikiShortcut(keys: "Fn ←", action: "Home: Scroll to beginning"),
+                 WikiShortcut(keys: "Fn →", action: "End: Scroll to end"),
+                 WikiShortcut(keys: "⌘ ↑", action: "Move to beginning of document"),
+                 WikiShortcut(keys: "⌘ ↓", action: "Move to end of document"),
+                 WikiShortcut(keys: "⌃ A", action: "Move to beginning of line/paragraph"),
+                 WikiShortcut(keys: "⌃ E", action: "Move to end of line/paragraph"),
+                 WikiShortcut(keys: "⌥ ←", action: "Move to beginning of previous word"),
+                 WikiShortcut(keys: "⌥ →", action: "Move to end of next word"),
+             ]
+        case .screenshot:
+             return [
+                 WikiShortcut(keys: "⌘ ⇧ 3", action: "Screenshot of entire screen"),
+                 WikiShortcut(keys: "⌘ ⇧ 4", action: "Screenshot of selection"),
+                 WikiShortcut(keys: "⌘ ⇧ 4 Space", action: "Screenshot of window"),
+                 WikiShortcut(keys: "⌘ ⇧ 5", action: "Screenshot app / options"),
+             ]
+        case .system:
+             return [
+                 WikiShortcut(keys: "⌘ ⇧ Q", action: "Log out (with confirmation)"),
+                 WikiShortcut(keys: "⌘ ⇧ ⌥ Q", action: "Log out (no confirmation)"),
+                 WikiShortcut(keys: "⌘ ⌃ ⌽", action: "Force restart"),
+                 WikiShortcut(keys: "⇧ ⌃ ⌽", action: "Put displays to sleep"),
+                 WikiShortcut(keys: "⌘ ⌥ ⌃ ⌽", action: "Quit all apps, then shut down"),
+             ]
+        case .documents:
+             return [
+                 WikiShortcut(keys: "⌘ B", action: "Bold selected text"),
+                 WikiShortcut(keys: "⌘ I", action: "Italicize selected text"),
+                 WikiShortcut(keys: "⌘ U", action: "Underline selected text"),
+                 WikiShortcut(keys: "⌘ T", action: "Show/hide Fonts window"),
+                 WikiShortcut(keys: "⌘ ⌃ D", action: "Show definition of selected word"),
+                 WikiShortcut(keys: "⌘ ⇧ :", action: "Spelling and Grammar window"),
+                 WikiShortcut(keys: "⌃ H", action: "Delete character to left"),
+                 WikiShortcut(keys: "⌃ D", action: "Delete character to right"),
+                 WikiShortcut(keys: "⌃ K", action: "Delete to end of line/paragraph"),
+                 WikiShortcut(keys: "⌥ ⌫", action: "Delete word to left"),
+             ]
+        case .finder:
+             return [
+                 WikiShortcut(keys: "⌘ N", action: "Open new Finder window"),
+                 WikiShortcut(keys: "⌘ I", action: "Get Info for selected file"),
+                 WikiShortcut(keys: "⌘ ⇧ N", action: "Create new folder"),
+                 WikiShortcut(keys: "⌘ ⌫", action: "Move to Trash"),
+                 WikiShortcut(keys: "⌘ ⇧ ⌫", action: "Empty Trash"),
+                 WikiShortcut(keys: "⌘ D", action: "Duplicate selected files"),
+                 WikiShortcut(keys: "Space", action: "Quick Look"),
+                 WikiShortcut(keys: "⌘ 1", action: "View as icons"),
+                 WikiShortcut(keys: "⌘ 2", action: "View as list"),
+                 WikiShortcut(keys: "⌘ 3", action: "View as columns"),
+                 WikiShortcut(keys: "⌘ [", action: "Go to previous folder"),
+                 WikiShortcut(keys: "⌘ ]", action: "Go to next folder"),
+             ]
         }
     }
-}
-
-#Preview {
-    WikiView()
 }
