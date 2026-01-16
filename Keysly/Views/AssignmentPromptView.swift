@@ -4,7 +4,7 @@ struct AssignmentPromptView: View {
     
     let keyCombo: KeyCombo
     let editingShortcut: Shortcut?
-    let onSave: (Action) -> Void
+    let onSave: (Action, [String]) -> Void
     let onCancel: () -> Void
     
     @State private var selectedActionType: ActionType = .app
@@ -14,6 +14,8 @@ struct AssignmentPromptView: View {
     @State private var scriptType: ScriptType = .shell
     @State private var selectedSystemAction: SystemActionType = .toggleDarkMode
     @State private var selectedShortcutName: String?
+    @State private var tags: [String] = []
+    @State private var newTagText: String = ""
     @State private var didInitialize = false
     
     // White & Orange Theme Colors
@@ -125,6 +127,66 @@ struct AssignmentPromptView: View {
                     .padding(.horizontal, 24)
                 }
                 
+                // Tags Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Tags")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(textSecondary)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        // Tag Input
+                        HStack {
+                            Image(systemName: "tag")
+                                .foregroundStyle(textSecondary)
+                            TextField("Add a tag (Enter)", text: $newTagText)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 14))
+                                .onSubmit {
+                                    addTag()
+                                }
+                        }
+                        .padding(12)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(bgTertiary, lineWidth: 1)
+                        )
+                        
+                        // Tags Flow
+                        if !tags.isEmpty {
+                            FlowLayout(spacing: 8) {
+                                ForEach(tags, id: \.self) { tag in
+                                    HStack(spacing: 4) {
+                                        Text(tag)
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundStyle(accentColor)
+                                        
+                                        Button {
+                                            removeTag(tag)
+                                        } label: {
+                                            Image(systemName: "xmark")
+                                                .font(.system(size: 10, weight: .bold))
+                                                .foregroundStyle(accentColor.opacity(0.6))
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(accentColor.opacity(0.1))
+                                    .clipShape(Capsule())
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(accentColor.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
+                
                 Spacer()
                 
                 // Footer
@@ -143,8 +205,14 @@ struct AssignmentPromptView: View {
                     Spacer()
                     
                     Button {
+                        var finalTags = tags
+                        let trimmed = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmed.isEmpty && !finalTags.contains(trimmed) {
+                            finalTags.append(trimmed)
+                        }
+                        
                         if let action = buildAction() {
-                            onSave(action)
+                            onSave(action, finalTags)
                         }
                     } label: {
                         Text(editingShortcut != nil ? "Update Action" : "Save Action")
@@ -211,6 +279,9 @@ struct AssignmentPromptView: View {
         case .chain:
             selectedActionType = .app
         }
+        
+        // Initialize Tags
+        tags = shortcut.tags
     }
     
     // MARK: - Action Configuration
@@ -366,6 +437,86 @@ struct AssignmentPromptView: View {
             guard let shortcut = selectedShortcutName else { return nil }
             return .runShortcut(name: shortcut)
         }
+    }
+    
+    private func addTag() {
+        let trimmed = newTagText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !tags.contains(trimmed) else { return }
+        withAnimation {
+            tags.append(trimmed)
+            newTagText = ""
+        }
+    }
+    
+    private func removeTag(_ tag: String) {
+        withAnimation {
+            tags.removeAll { $0 == tag }
+        }
+    }
+}
+
+// MARK: - Flow Layout
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        let height = rows.last?.maxY ?? 0
+        return CGSize(width: proposal.width ?? 0, height: height)
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let rows = computeRows(proposal: proposal, subviews: subviews)
+        for row in rows {
+            for element in row.elements {
+                element.subview.place(at: CGPoint(x: bounds.minX + element.x, y: bounds.minY + element.y), proposal: .unspecified)
+            }
+        }
+    }
+    
+    struct Row {
+        var elements: [Element] = []
+        var y: CGFloat = 0
+        var height: CGFloat = 0
+        
+        var maxY: CGFloat { y + height }
+    }
+    
+    struct Element {
+        let subview: LayoutSubview
+        let x: CGFloat
+        let y: CGFloat
+    }
+    
+    func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [Row] {
+        var rows: [Row] = []
+        var currentRow = Row()
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        let maxWidth = proposal.width ?? 0
+        
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            
+            if x + size.width > maxWidth && !currentRow.elements.isEmpty {
+                // New row
+                y += currentRow.height + spacing
+                rows.append(currentRow)
+                currentRow = Row()
+                x = 0
+                currentRow.y = y
+            }
+            
+            currentRow.elements.append(Element(subview: subview, x: x, y: y))
+            currentRow.height = max(currentRow.height, size.height)
+            x += size.width + spacing
+        }
+        
+        if !currentRow.elements.isEmpty {
+            rows.append(currentRow)
+        }
+        
+        return rows
     }
 }
 

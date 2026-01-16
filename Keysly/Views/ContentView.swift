@@ -156,45 +156,20 @@ struct ContentView: View {
     // MARK: - Shortcuts View
     
     private var shortcutsView: some View {
-        VStack(spacing: 0) {
-            // Minimal Header
-            HStack {
-                Spacer()
-                Button {
-                    editingShortcut = nil
-                    startRecording()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .light))
-                        .foregroundStyle(textSecondary)
-                        .padding(8)
-                        .background(bgSecondary)
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
+        ShortcutsExplorerView(
+            onAdd: {
+                editingShortcut = nil
+                startRecording()
+            },
+            onEdit: { shortcut in
+                editingShortcut = shortcut
+                recordedKeyCombo = shortcut.keyCombo
+                showingAssignment = true
+            },
+            onDelete: { shortcut in
+                shortcutToDelete = shortcut
             }
-            .padding(20)
-            
-            if appState.shortcutStore.shortcuts.isEmpty {
-                emptyState
-            } else {
-                ShortcutsListView(
-                    bgSecondary: bgSecondary,
-                    bgTertiary: bgTertiary,
-                    textPrimary: textPrimary,
-                    textSecondary: textSecondary,
-                    accentColor: accentColor,
-                    onEdit: { shortcut in
-                        editingShortcut = shortcut
-                        recordedKeyCombo = shortcut.keyCombo
-                        showingAssignment = true
-                    },
-                    onDelete: { shortcut in
-                        shortcutToDelete = shortcut
-                    }
-                )
-            }
-        }
+        )
     }
     
     private var emptyState: some View {
@@ -216,8 +191,8 @@ struct ContentView: View {
         AssignmentPromptView(
             keyCombo: keyCombo,
             editingShortcut: editingShortcut,
-            onSave: { action in
-                handleSave(keyCombo: keyCombo, action: action)
+            onSave: { action, tags in
+                handleSave(keyCombo: keyCombo, action: action, tags: tags)
             },
             onCancel: {
                 showingAssignment = false
@@ -228,7 +203,7 @@ struct ContentView: View {
         .transition(.opacity)
     }
     
-    private func handleSave(keyCombo: KeyCombo, action: Action) {
+    private func handleSave(keyCombo: KeyCombo, action: Action, tags: [String]) {
         if let conflict = appState.shortcutStore.findConflict(for: keyCombo, excludingId: editingShortcut?.id) {
             conflictError = "'\(keyCombo.displayString)' is used by '\(conflict.action.displayName)'"
             return
@@ -238,9 +213,11 @@ struct ContentView: View {
             var updated = editing
             updated.keyCombo = keyCombo
             updated.action = action
+            updated.tags = tags
             try? appState.shortcutStore.updateShortcut(updated)
         } else {
-            appState.saveShortcut(keyCombo: keyCombo, action: action)
+            let newShortcut = Shortcut(keyCombo: keyCombo, action: action, tags: tags)
+            try? appState.shortcutStore.addShortcut(newShortcut)
         }
         showingAssignment = false
         recordedKeyCombo = nil

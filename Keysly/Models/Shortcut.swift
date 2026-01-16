@@ -60,6 +60,7 @@ struct Shortcut: Identifiable, Codable, Hashable, Sendable {
     var keyCombo: KeyCombo
     var action: Action
     var contextAppBundleId: String?  // nil = global shortcut
+    var tags: [String]
     var useCount: Int
     var createdAt: Date
     var lastUsedAt: Date?
@@ -68,19 +69,47 @@ struct Shortcut: Identifiable, Codable, Hashable, Sendable {
         id: UUID = UUID(),
         keyCombo: KeyCombo,
         action: Action,
-        contextAppBundleId: String? = nil
+        contextAppBundleId: String? = nil,
+        tags: [String] = []
     ) {
         self.id = id
         self.keyCombo = keyCombo
         self.action = action
         self.contextAppBundleId = contextAppBundleId
+        self.tags = tags
         self.useCount = 0
         self.createdAt = Date()
         self.lastUsedAt = nil
     }
     
+    // Manual decoding to handle missing 'tags' key in legacy data
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.keyCombo = try container.decode(KeyCombo.self, forKey: .keyCombo)
+        self.action = try container.decode(Action.self, forKey: .action)
+        self.contextAppBundleId = try container.decodeIfPresent(String.self, forKey: .contextAppBundleId)
+        self.tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        self.useCount = try container.decode(Int.self, forKey: .useCount)
+        self.createdAt = try container.decode(Date.self, forKey: .createdAt)
+        self.lastUsedAt = try container.decodeIfPresent(Date.self, forKey: .lastUsedAt)
+    }
+    
     mutating func recordUse() {
         useCount += 1
         lastUsedAt = Date()
+    }
+}
+
+// MARK: - KeyCombo Extension
+extension KeyCombo {
+    var keyStrings: [String] {
+        var keys: [String] = []
+        if modifiers.contains(.control) { keys.append("⌃") }
+        if modifiers.contains(.option) { keys.append("⌥") }
+        if modifiers.contains(.shift) { keys.append("⇧") }
+        if modifiers.contains(.command) { keys.append("⌘") }
+        keys.append(keyString.uppercased())
+        return keys
     }
 }
