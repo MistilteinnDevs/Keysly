@@ -172,7 +172,8 @@ struct WikiShortcutRow: View {
 
 enum ShortcutCategory: String, CaseIterable {
     case common, copyPaste, window, app, navigation, screenshot, finder, documents, system, input
-    case mail, safari, notes, calendar, messages
+    case mail, safari, notes, calendar, messages, terminal, preview
+    case contacts, reminders, photos, maps, music, news, keynote, numbers, pages
     
     var title: String {
         switch self {
@@ -191,6 +192,17 @@ enum ShortcutCategory: String, CaseIterable {
         case .notes: return "Notes"
         case .calendar: return "Calendar"
         case .messages: return "Messages"
+        case .terminal: return "Terminal"
+        case .preview: return "Preview"
+        case .contacts: return "Contacts"
+        case .reminders: return "Reminders"
+        case .photos: return "Photos"
+        case .maps: return "Maps"
+        case .music: return "Music"
+        case .news: return "News"
+        case .keynote: return "Keynote"
+        case .numbers: return "Numbers"
+        case .pages: return "Pages"
         }
     }
     
@@ -211,6 +223,17 @@ enum ShortcutCategory: String, CaseIterable {
         case .notes: return "note.text"
         case .calendar: return "calendar"
         case .messages: return "message"
+        case .terminal: return "apple.terminal"
+        case .preview: return "eye"
+        case .contacts: return "person.crop.circle"
+        case .reminders: return "list.bullet.rectangle"
+        case .photos: return "photo"
+        case .maps: return "map"
+        case .music: return "music.note"
+        case .news: return "newspaper"
+        case .keynote: return "chart.bar.doc.horizontal" // Approximation
+        case .numbers: return "chart.bar"
+        case .pages: return "doc.text"
         }
     }
     
@@ -231,6 +254,17 @@ enum ShortcutCategory: String, CaseIterable {
         case .notes: return "Formatting, checklists, and note management."
         case .calendar: return "Views, event creation, and navigation."
         case .messages: return "Conversations, replies, and text formatting."
+        case .terminal: return "Shell commands, tabs, and window management."
+        case .preview: return "Image editing, PDF navigation, and zoom."
+        case .contacts: return "Managing contacts, groups, and cards."
+        case .reminders: return "Tasks, lists, and due dates."
+        case .photos: return "Viewing, editing, and organizing library."
+        case .maps: return "Navigation, zoom, and map views."
+        case .music: return "Playback control, playlists, and library."
+        case .news: return "Reading stories, sidebar, and navigation."
+        case .keynote: return "Slides, presentations, and formatting."
+        case .numbers: return "Spreadsheets, formulas, and cells."
+        case .pages: return "Word processing, layout, and formatting."
         }
     }
 }
@@ -364,18 +398,28 @@ struct WikiData {
         case .finder:
              return [
                  WikiShortcut(keys: "⌘ N", action: "Open new Finder window"),
-                 WikiShortcut(keys: "⌘ I", action: "Get Info for selected file"),
-                 WikiShortcut(keys: "⌘ ⇧ N", action: "Create new folder"),
-                 WikiShortcut(keys: "⌘ ⌫", action: "Move to Trash"),
-                 WikiShortcut(keys: "⌘ ⇧ ⌫", action: "Empty Trash"),
-                 WikiShortcut(keys: "⌘ D", action: "Duplicate selected files"),
-                 WikiShortcut(keys: "Space", action: "Quick Look"),
-                 WikiShortcut(keys: "⌘ 1", action: "View as icons"),
-                 WikiShortcut(keys: "⌘ 2", action: "View as list"),
-                 WikiShortcut(keys: "⌘ 3", action: "View as columns"),
-                 WikiShortcut(keys: "⌘ [", action: "Go to previous folder"),
-                 WikiShortcut(keys: "⌘ ]", action: "Go to next folder"),
-             ]
+                WikiShortcut(keys: "⌘ T", action: "Show/Hide Tab Bar"),
+                WikiShortcut(keys: "⌘ I", action: "Get Info"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "New folder"),
+                WikiShortcut(keys: "⌘ ⌫", action: "Move to Trash"),
+                WikiShortcut(keys: "⌘ ⇧ ⌫", action: "Empty Trash"),
+                WikiShortcut(keys: "⌘ D", action: "Duplicate"),
+                WikiShortcut(keys: "Space", action: "Quick Look"),
+                WikiShortcut(keys: "⌘ 1", action: "Icon view"),
+                WikiShortcut(keys: "⌘ 2", action: "List view"),
+                WikiShortcut(keys: "⌘ 3", action: "Column view"),
+                WikiShortcut(keys: "⌘ 4", action: "Gallery view"),
+                WikiShortcut(keys: "⌘ [", action: "Previous folder"),
+                WikiShortcut(keys: "⌘ ]", action: "Next folder"),
+                WikiShortcut(keys: "⌘ ↑", action: "Enclosing folder"),
+                WikiShortcut(keys: "⌘ ⇧ G", action: "Go to Folder"),
+                WikiShortcut(keys: "⌘ ⇧ A", action: "Go to Applications"),
+                WikiShortcut(keys: "⌘ ⇧ U", action: "Go to Utilities"),
+                WikiShortcut(keys: "⌘ ⇧ D", action: "Go to Desktop"),
+                WikiShortcut(keys: "⌘ ⌥ D", action: "Show/Hide Dock"),
+                WikiShortcut(keys: "⌘ J", action: "Show View Options"),
+                WikiShortcut(keys: "⌘ K", action: "Connect to Server"),
+            ]
         default:
             return []
         }
@@ -385,55 +429,216 @@ struct WikiData {
         switch category {
         case .mail:
             return [
-                WikiShortcut(keys: "⌘ N", action: "Compose new message"),
-                WikiShortcut(keys: "⌘ ⇧ N", action: "Get all new mail"),
+                WikiShortcut(keys: "⌘ N", action: "New message"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "Get new mail"),
                 WikiShortcut(keys: "⌘ ⇧ D", action: "Send message"),
-                WikiShortcut(keys: "⌘ R", action: "Reply to sender"),
-                WikiShortcut(keys: "⌘ ⇧ R", action: "Reply to all"),
-                WikiShortcut(keys: "⌘ ⇧ F", action: "Forward message"),
+                WikiShortcut(keys: "⌘ R", action: "Reply"),
+                WikiShortcut(keys: "⌘ ⇧ R", action: "Reply All"),
+                WikiShortcut(keys: "⌘ ⇧ F", action: "Forward"),
+                WikiShortcut(keys: "⌘ ⇧ A", action: "Attach files"),
+                WikiShortcut(keys: "⌘ ⇧ U", action: "Mark as Read/Unread"),
                 WikiShortcut(keys: "⌘ 1", action: "Go to Inbox"),
-                WikiShortcut(keys: "⌘ 4", action: "Go to Sent"),
+                WikiShortcut(keys: "⌘ 2", action: "Go to VIPs"),
+                WikiShortcut(keys: "⌘ 3", action: "Go to Sent"),
+                WikiShortcut(keys: "⌘ 0", action: "Message Viewer"),
+                WikiShortcut(keys: "⌘ /", action: "Toggle Sidebar"),
+                WikiShortcut(keys: "⌃ ⌘ A", action: "Archive selected"),
+                WikiShortcut(keys: "⌃ ⌘ J", action: "Mark as Junk"),
             ]
         case .safari:
             return [
-                WikiShortcut(keys: "⌘ T", action: "Open new tab"),
-                WikiShortcut(keys: "⌘ N", action: "Open new window"),
-                WikiShortcut(keys: "⌘ ⇧ N", action: "Open private window"),
-                WikiShortcut(keys: "⌘ L", action: "Open Location (URL bar)"),
+                WikiShortcut(keys: "⌘ T", action: "New tab"),
+                WikiShortcut(keys: "⌘ N", action: "New window"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "New private window"),
+                WikiShortcut(keys: "⌘ L", action: "Open Location (URL)"),
                 WikiShortcut(keys: "⌘ W", action: "Close tab"),
-                WikiShortcut(keys: "⌘ ⇧ T", action: "Reopen last closed tab"),
+                WikiShortcut(keys: "⌘ ⇧ W", action: "Close window"),
+                WikiShortcut(keys: "⌘ Z", action: "Reopen last closed tab"),
+                WikiShortcut(keys: "⌘ .", action: "Stop loading"),
                 WikiShortcut(keys: "⌘ R", action: "Reload page"),
-                WikiShortcut(keys: "⌘ [", action: "Go back"),
-                WikiShortcut(keys: "⌘ ]", action: "Go forward"),
+                WikiShortcut(keys: "⌘ [", action: "Back"),
+                WikiShortcut(keys: "⌘ ]", action: "Forward"),
+                WikiShortcut(keys: "⌘ D", action: "Add bookmark"),
+                WikiShortcut(keys: "⌘ ⇧ L", action: "Show Sidebar"),
+                WikiShortcut(keys: "⌃ Tab", action: "Next tab"),
+                WikiShortcut(keys: "⌃ ⇧ Tab", action: "Previous tab"),
+                WikiShortcut(keys: "⌘ 1", action: "Show Bookmarks"),
+                WikiShortcut(keys: "⌘ 2", action: "Show Reading List"),
+                WikiShortcut(keys: "⌘ ⇧ \\", action: "Show Tab Overview"),
             ]
         case .notes:
             return [
                 WikiShortcut(keys: "⌘ N", action: "New note"),
+                WikiShortcut(keys: "⌘ D", action: "Duplicate note"),
                 WikiShortcut(keys: "⌘ ⇧ N", action: "New folder"),
-                WikiShortcut(keys: "⌘ ⇧ T", action: "Format as Title"),
-                WikiShortcut(keys: "⌘ ⇧ H", action: "Format as Heading"),
-                WikiShortcut(keys: "⌘ ⇧ L", action: "Toggle Checklist"),
-                WikiShortcut(keys: "⌘ F", action: "Search in note"),
+                WikiShortcut(keys: "⌘ K", action: "Add link"),
+                WikiShortcut(keys: "⌘ ⇧ T", action: "Title format"),
+                WikiShortcut(keys: "⌘ ⇧ H", action: "Heading format"),
+                WikiShortcut(keys: "⌘ ⇧ J", action: "Subheading format"),
+                WikiShortcut(keys: "⌘ ⇧ B", action: "Body format"),
+                WikiShortcut(keys: "⌘ ⇧ L", action: "Checklist format"),
+                WikiShortcut(keys: "⌘ ⇧ U", action: "Mark checked/unchecked"),
+                WikiShortcut(keys: "⌘ +", action: "Increase text size"),
+                WikiShortcut(keys: "⌘ -", action: "Decrease text size"),
                 WikiShortcut(keys: "⌥ ⌘ F", action: "Search all notes"),
+                WikiShortcut(keys: "⌘ 1", action: "List view"),
+                WikiShortcut(keys: "⌘ 2", action: "Gallery view"),
+                WikiShortcut(keys: "⌘ 3", action: "Show attachments"),
             ]
         case .calendar:
             return [
                 WikiShortcut(keys: "⌘ N", action: "New event"),
+                WikiShortcut(keys: "⌘ E", action: "Edit event"),
                 WikiShortcut(keys: "⌘ T", action: "Go to Today"),
+                WikiShortcut(keys: "⌘ ⇧ T", action: "Go to Date"),
                 WikiShortcut(keys: "⌘ 1", action: "Day view"),
                 WikiShortcut(keys: "⌘ 2", action: "Week view"),
                 WikiShortcut(keys: "⌘ 3", action: "Month view"),
                 WikiShortcut(keys: "⌘ 4", action: "Year view"),
                 WikiShortcut(keys: "⌘ R", action: "Refresh calendars"),
+                WikiShortcut(keys: "⌘ ⌥ I", action: "Inspector"),
+                WikiShortcut(keys: "⌘ I", action: "Get Info"),
+                WikiShortcut(keys: "Space", action: "Select next calendar (List)"),
+                WikiShortcut(keys: "⌘ →", action: "Next day/week/month"),
+                WikiShortcut(keys: "⌘ ←", action: "Previous day/week/month"),
             ]
         case .messages:
             return [
                 WikiShortcut(keys: "⌘ N", action: "New conversation"),
-                WikiShortcut(keys: "⌘ R", action: "Reply to last message"),
-                WikiShortcut(keys: "⌘ ⇧ U", action: "Mark as Unread"),
-                WikiShortcut(keys: "⌃ Tab", action: "Next conversation"),
-                WikiShortcut(keys: "⌃ ⇧ Tab", action: "Previous conversation"),
+                WikiShortcut(keys: "⌘ R", action: "Reply"),
+                WikiShortcut(keys: "⌘ ⇧ U", action: "Mark Unread"),
+                WikiShortcut(keys: "⌃ ⌘ 1", action: "All messages"),
+                WikiShortcut(keys: "⌃ ⌘ 2", action: "Known senders"),
+                WikiShortcut(keys: "⌃ ⌘ 3", action: "Unknown senders"),
+                WikiShortcut(keys: "⌃ Tab", action: "Next Conversation"),
+                WikiShortcut(keys: "⌘ 0", action: "Messages Window"),
+                WikiShortcut(keys: "⌘ E", action: "Edit sent message"),
+                WikiShortcut(keys: "⌘ T", action: "Tapback (then 1-6)"),
+                WikiShortcut(keys: "Space", action: "Quick Look image"),
             ]
+        case .terminal:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New window"),
+                WikiShortcut(keys: "⌘ T", action: "New tab"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "New Command"),
+                WikiShortcut(keys: "⌘ ⇧ K", action: "New Remote Connection"),
+                WikiShortcut(keys: "⌘ I", action: "Inspector"),
+                WikiShortcut(keys: "⌘ D", action: "Split Pane"),
+                WikiShortcut(keys: "⌘ ⇧ D", action: "Close Pane"),
+                WikiShortcut(keys: "⌘ W", action: "Close Tab"),
+                WikiShortcut(keys: "⌃ A", action: "Start of line"),
+                WikiShortcut(keys: "⌃ E", action: "End of line"),
+                WikiShortcut(keys: "⌃ U", action: "Delete line"),
+                WikiShortcut(keys: "⌃ K", action: "Delete to end"),
+                WikiShortcut(keys: "⌘ K", action: "Clear scrollback"),
+            ]
+        case .preview:
+            return [
+                WikiShortcut(keys: "⌘ ⇧ +", action: "Zoom In"),
+                WikiShortcut(keys: "⌘ ⇧ -", action: "Zoom Out"),
+                WikiShortcut(keys: "⌘ 0", action: "Actual Size"),
+                WikiShortcut(keys: "⌘ 9", action: "Zoom to Fit"),
+                WikiShortcut(keys: "⌘ ⇧ A", action: "Annotate Toolbar"),
+                WikiShortcut(keys: "⌘ R", action: "Rotate Left"),
+                WikiShortcut(keys: "⌘ L", action: "Rotate Right"),
+                WikiShortcut(keys: "⌘ ⇧ T", action: "Show Markup Toolbar"),
+                WikiShortcut(keys: "⌘ ⌥ 0", action: "Contact Sheet"),
+            ]
+        case .contacts:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New Contact"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "New List"),
+                WikiShortcut(keys: "⌘ S", action: "Save Contact"),
+                WikiShortcut(keys: "⌘ L", action: "Edit Contact"),
+                WikiShortcut(keys: "⌘ I", action: "View Card"),
+                WikiShortcut(keys: "⌘ ]", action: "Next Card"),
+                WikiShortcut(keys: "⌘ [", action: "Previous Card"),
+                WikiShortcut(keys: "⌘ 1", action: "Show/Hide Groups"),
+            ]
+        case .reminders:
+            return [
+                WikiShortcut(keys: "⌘ N", action: "New Reminder"),
+                WikiShortcut(keys: "⌘ ⇧ N", action: "New List"),
+                WikiShortcut(keys: "⌘ E", action: "Show Subtasks"),
+                WikiShortcut(keys: "⌘ T", action: "Due Today"),
+                WikiShortcut(keys: "⌥ ⌘ T", action: "Due Tomorrow"),
+                WikiShortcut(keys: "⌘ K", action: "Due Weekend"),
+                WikiShortcut(keys: "⌘ ⇧ F", action: "Flag"),
+                WikiShortcut(keys: "⌘ ⇧ C", action: "Mark Completed"),
+            ]
+        case .photos:
+             return [
+                 WikiShortcut(keys: "Space", action: "Open/Close Photo"),
+                 WikiShortcut(keys: "Return", action: "Edit Photo"),
+                 WikiShortcut(keys: "C", action: "Crop"),
+                 WikiShortcut(keys: "A", action: "Adjust"),
+                 WikiShortcut(keys: "F", action: "Filters"),
+                 WikiShortcut(keys: "⌘ R", action: "Rotate"),
+                 WikiShortcut(keys: "⌘ E", action: "Auto-Enhance"),
+                 WikiShortcut(keys: "⌘ L", action: "Hide Photo"),
+                 WikiShortcut(keys: "⌘ D", action: "Duplicate"),
+                 WikiShortcut(keys: "Period", action: "Favorite Matches"),
+                 WikiShortcut(keys: "⌃ ⌘ F", action: "Full Screen"),
+             ]
+        case .maps:
+             return [
+                 WikiShortcut(keys: "⌘ L", action: "Show Location"),
+                 WikiShortcut(keys: "⌘ +", action: "Zoom In"),
+                 WikiShortcut(keys: "⌘ -", action: "Zoom Out"),
+                 WikiShortcut(keys: "⌘ 1", action: "Explore View"),
+                 WikiShortcut(keys: "⌘ 2", action: "Driving View"),
+                 WikiShortcut(keys: "⌘ 3", action: "Transit View"),
+                 WikiShortcut(keys: "⌘ 4", action: "Satellite View"),
+                 WikiShortcut(keys: "⌘ D", action: "Toggle 3D"),
+             ]
+        case .music:
+             return [
+                 WikiShortcut(keys: "Space", action: "Play/Pause"),
+                 WikiShortcut(keys: "⌘ →", action: "Next Song"),
+                 WikiShortcut(keys: "⌘ ←", action: "Previous Song"),
+                 WikiShortcut(keys: "⌘ ↑", action: "Volume Up"),
+                 WikiShortcut(keys: "⌘ ↓", action: "Volume Down"),
+                 WikiShortcut(keys: "⌘ N", action: "New Playlist"),
+                 WikiShortcut(keys: "⌥ ⌘ E", action: "Equalizer"),
+                 WikiShortcut(keys: "⌥ ⌘ M", action: "Mini Player"),
+             ]
+        case .news:
+             return [
+                 WikiShortcut(keys: "⌘ N", action: "New Window"),
+                 WikiShortcut(keys: "⌘ R", action: "Refresh Feed"),
+                 WikiShortcut(keys: "⌘ S", action: "Save Story"),
+                 WikiShortcut(keys: "⌘ L", action: "Suggest More Like This"),
+                 WikiShortcut(keys: "⌘ D", action: "Suggest Less Like This"),
+                 WikiShortcut(keys: "⌘ →", action: "Next Story"),
+                 WikiShortcut(keys: "⌘ ←", action: "Previous Story"),
+             ]
+        case .keynote:
+             return [
+                 WikiShortcut(keys: "⌘ N", action: "New Presentation"),
+                 WikiShortcut(keys: "⌥ ⌘ P", action: "Play Slideshow"),
+                 WikiShortcut(keys: "⌘ ⇧ P", action: "Show Presenter Notes"),
+                 WikiShortcut(keys: "⌥ ⌘ G", action: "Group Objects"),
+                 WikiShortcut(keys: "⌥ ⇧ ⌘ G", action: "Ungroup Objects"),
+                 WikiShortcut(keys: "⌘ L", action: "Lock Object"),
+                 WikiShortcut(keys: "⌥ ⌘ L", action: "Unlock Object"),
+             ]
+        case .numbers:
+             return [
+                 WikiShortcut(keys: "⌘ N", action: "New Spreadsheet"),
+                 WikiShortcut(keys: "⌘ ⇧ N", action: "Add Sheet"),
+                 WikiShortcut(keys: "Option ⌘ F", action: "Toggle Filters"),
+                 WikiShortcut(keys: "Option ⌘ U", action: "Auto-Align Content"),
+                 WikiShortcut(keys: "=", action: "Start Formula"),
+             ]
+        case .pages:
+             return [
+                 WikiShortcut(keys: "⌘ N", action: "New Document"),
+                 WikiShortcut(keys: "⌘ R", action: "Show Ruler"),
+                 WikiShortcut(keys: "⌘ ⇧ W", action: "Word Count"),
+                 WikiShortcut(keys: "⌘ ⇧ L", action: "Show Layout"),
+                 WikiShortcut(keys: "⌘ Return", action: "Page Break"),
+                 WikiShortcut(keys: "⌘ ;", action: "Check Spelling"),
+             ]
         default:
             return []
         }
