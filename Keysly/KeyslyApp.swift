@@ -7,12 +7,14 @@ import AppKit
 struct KeyslyApp: App {
     
     @State private var appState = AppState()
+    @AppStorage("selectedTheme") private var selectedTheme = "system"
     
     var body: some Scene {
         // Main window
         WindowGroup {
             ContentView()
                 .environment(appState)
+                .preferredColorScheme(colorScheme)
         }
         .windowResizability(.contentSize)
         
@@ -20,6 +22,15 @@ struct KeyslyApp: App {
         Settings {
             SettingsView()
                 .environment(appState)
+                .preferredColorScheme(colorScheme)
+        }
+    }
+    
+    private var colorScheme: ColorScheme? {
+        switch selectedTheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
         }
     }
 }

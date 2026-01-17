@@ -1,11 +1,14 @@
 import SwiftUI
 
 struct WikiContentView: View {
+    let bgPrimary: Color
     let bgSecondary: Color
     let bgTertiary: Color
     let accentColor: Color
     let textPrimary: Color
     let textSecondary: Color
+    
+    @Environment(\.colorScheme) private var colorScheme
     
     @State private var searchText = ""
     @State private var selectedCategory: ShortcutCategory = .common
@@ -24,12 +27,13 @@ struct WikiContentView: View {
                         .font(.system(size: 13))
                         .foregroundStyle(textPrimary)
                 }
+
                 .padding(8)
-                .background(Color.white)
+                .background(bgPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                        .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.1), lineWidth: 1)
                 )
                 .padding(12)
                 
@@ -66,7 +70,7 @@ struct WikiContentView: View {
             .background(bgSecondary.opacity(0.5))
             .overlay(
                 Rectangle()
-                    .fill(Color.black.opacity(0.05))
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
                     .frame(width: 1),
                 alignment: .trailing
             )

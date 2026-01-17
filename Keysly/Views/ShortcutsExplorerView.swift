@@ -3,13 +3,28 @@ import SwiftUI
 struct ShortcutsExplorerView: View {
     
     @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("compactView") private var compactView = false
     
-    // Theme Colors (Consistent with WikiView)
-    private let bgSecondary = Color(hex: 0xF5F5F7)
-    private let bgTertiary = Color(hex: 0xE5E5EB)
-    private let accentColor = Color(hex: 0xFF9500)
-    private let textPrimary = Color(hex: 0x000000)
-    private let textSecondary = Color(hex: 0x6E6E73)
+    // Theme Colors (Adaptive)
+    private var bgPrimary: Color {
+        colorScheme == .dark ? Color(hex: 0x1C1C1E) : Color(hex: 0xFFFFFF)
+    }
+    private var bgSecondary: Color {
+        colorScheme == .dark ? Color(hex: 0x2C2C2E) : Color(hex: 0xF5F5F7)
+    }
+    private var bgTertiary: Color {
+        colorScheme == .dark ? Color(hex: 0x3A3A3C) : Color(hex: 0xE5E5EB)
+    }
+    private var accentColor: Color {
+        Color(hex: 0xFF9500)
+    }
+    private var textPrimary: Color {
+        colorScheme == .dark ? .white : Color(hex: 0x000000)
+    }
+    private var textSecondary: Color {
+        colorScheme == .dark ? Color(hex: 0x8E8E93) : Color(hex: 0x6E6E73)
+    }
     
     // Navigation
     enum NavigationSelection: Hashable {
@@ -41,115 +56,8 @@ struct ShortcutsExplorerView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            // MARK: - Sidebar
-            VStack(spacing: 0) {
-                // Search Bar
-                HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 14))
-                        .foregroundStyle(textSecondary)
-                    TextField("Search", text: $searchText)
-                        .textFieldStyle(.plain)
-                        .font(.system(size: 13))
-                        .foregroundStyle(textPrimary)
-                }
-                .padding(8)
-                .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
-                )
-                .padding(12)
-                
-                ScrollView {
-                    LazyVStack(spacing: 4) {
-                        // "All Shortcuts" Item
-                        sidebarButton(for: .all)
-                        
-                        Divider()
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                        
-                        // Tags List
-                        if !uniqueTags.isEmpty {
-                            Text("TAGS")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(textSecondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 12)
-                                .padding(.bottom, 4)
-                            
-                            ForEach(uniqueTags, id: \.self) { tag in
-                                sidebarButton(for: .tag(tag))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 12)
-                }
-            }
-            .frame(width: 220)
-            .background(bgSecondary.opacity(0.5))
-            .overlay(
-                Rectangle()
-                    .fill(Color.black.opacity(0.05))
-                    .frame(width: 1),
-                alignment: .trailing
-            )
-            
-            // MARK: - Main Content
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text(selection.title)
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundStyle(textPrimary)
-                    
-                    Spacer()
-                    
-                    // Add Button (Moved to Header)
-                    Button {
-                        onAdd()
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .semibold)) // Slightly larger
-                            .foregroundStyle(textPrimary)
-                            .padding(8)
-                            .background(Color.white)
-                            .clipShape(Circle())
-                            .shadow(color: Color.black.opacity(0.1), radius: 2, y: 1)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, 40)
-                .padding(.top, 40)
-                .padding(.bottom, 24)
-                
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 12) {
-                        if filteredShortcuts.isEmpty {
-                            emptyState
-                        } else {
-                            ForEach(filteredShortcuts) { shortcut in
-                                ShortcutExplorerCard(
-                                    shortcut: shortcut,
-                                    bgSecondary: bgSecondary,
-                                    bgTertiary: bgTertiary,
-                                    textPrimary: textPrimary,
-                                    textSecondary: textSecondary,
-                                    accentColor: accentColor
-                                )
-                                .onTapGesture {
-                                    selectedShortcut = shortcut
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 40)
-                    .padding(.bottom, 40)
-                }
-            }
+            sidebarView
+            mainContentView
         }
         .sheet(item: $selectedShortcut) { shortcut in
             ShortcutDetailView(
@@ -164,6 +72,148 @@ struct ShortcutsExplorerView: View {
                     onDelete(shortcut)
                 }
             )
+        }
+    }
+    
+    // MARK: - Subviews
+    
+    private var sidebarView: some View {
+        VStack(spacing: 0) {
+            searchBar
+            sidebarList
+        }
+        .frame(width: 220)
+        .background(bgSecondary.opacity(0.5))
+        .overlay(
+            Rectangle()
+                .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
+                .frame(width: 1),
+            alignment: .trailing
+        )
+    }
+    
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 14))
+                .foregroundStyle(textSecondary)
+            TextField("Search", text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .foregroundStyle(textPrimary)
+        }
+        .padding(8)
+        .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.1), lineWidth: 1)
+        )
+        .padding(12)
+    }
+    
+    private var sidebarList: some View {
+        ScrollView {
+            LazyVStack(spacing: 4) {
+                // "All Shortcuts" Item
+                sidebarButton(for: .all)
+                
+                Divider()
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                
+                // Tags List
+                if !uniqueTags.isEmpty {
+                    Text("TAGS")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 4)
+                    
+                    ForEach(uniqueTags, id: \.self) { tag in
+                        sidebarButton(for: .tag(tag))
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.bottom, 12)
+        }
+    }
+    
+    private var mainContentView: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text(selection.title)
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(textPrimary)
+                
+                Spacer()
+                
+                // Add Button (Moved to Header)
+                Button {
+                    onAdd()
+                } label: {
+                    Image(systemName: "plus")
+                    .font(.system(size: 16, weight: .semibold)) // Slightly larger
+                    .foregroundStyle(textPrimary)
+                    .padding(8)
+                    .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.white)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.1), radius: 2, y: 1)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 40)
+            .padding(.top, 40)
+            .padding(.bottom, 24)
+            
+            ScrollView {
+                if filteredShortcuts.isEmpty {
+                    emptyState
+                } else {
+                    if compactView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 140, maximum: 160), spacing: 16)], spacing: 16) {
+                            ForEach(filteredShortcuts) { shortcut in
+                                CompactShortcutCard(
+                                    shortcut: shortcut,
+                                    bgPrimary: bgPrimary,
+                                    bgSecondary: bgSecondary,
+                                    bgTertiary: bgTertiary,
+                                    textPrimary: textPrimary,
+                                    textSecondary: textSecondary,
+                                    accentColor: accentColor
+                                )
+                                .onTapGesture {
+                                    selectedShortcut = shortcut
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 40)
+                        .padding(.bottom, 40)
+                    } else {
+                        LazyVStack(alignment: .leading, spacing: 12) {
+                            ForEach(filteredShortcuts) { shortcut in
+                                ShortcutExplorerCard(
+                                    shortcut: shortcut,
+                                    bgPrimary: bgPrimary,
+                                    bgSecondary: bgSecondary,
+                                    bgTertiary: bgTertiary,
+                                    textPrimary: textPrimary,
+                                    textSecondary: textSecondary,
+                                    accentColor: accentColor
+                                )
+                                .onTapGesture {
+                                    selectedShortcut = shortcut
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 40)
+                        .padding(.bottom, 40)
+                    }
+                }
+            }
         }
     }
     
@@ -254,6 +304,7 @@ struct ShortcutsExplorerView: View {
 
 struct ShortcutExplorerCard: View {
     let shortcut: Shortcut
+    let bgPrimary: Color
     let bgSecondary: Color
     let bgTertiary: Color
     let textPrimary: Color
@@ -322,7 +373,7 @@ struct ShortcutExplorerCard: View {
         .padding(.vertical, 14)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isHovered ? bgSecondary : Color.white) // Subtle highlight or white
+                .fill(isHovered ? bgSecondary : bgPrimary) // Subtle highlight or white
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
@@ -344,6 +395,99 @@ struct ShortcutExplorerCard: View {
                 Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
                     .resizable()
                     .frame(width: 18, height: 18)
+            } else {
+                Image(systemName: "app")
+                    .foregroundStyle(textSecondary)
+            }
+        case .runShortcut:
+            Image(systemName: "bolt")
+                .foregroundStyle(textSecondary)
+        case .openURL:
+            Image(systemName: "globe")
+                .foregroundStyle(textSecondary)
+        case .systemAction:
+            Image(systemName: "macwindow")
+                .foregroundStyle(textSecondary)
+        default:
+            Image(systemName: "command")
+                .foregroundStyle(textSecondary)
+        }
+    }
+}
+
+struct CompactShortcutCard: View {
+    let shortcut: Shortcut
+    let bgPrimary: Color
+    let bgSecondary: Color
+    let bgTertiary: Color
+    let textPrimary: Color
+    let textSecondary: Color
+    let accentColor: Color
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Icon
+            iconView
+                .font(.system(size: 24))
+                .frame(width: 32, height: 32)
+                .background(bgPrimary)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
+            
+            // Name
+            Text(shortcut.action.displayName)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(textPrimary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .frame(height: 32, alignment: .top)
+            
+            // Keys
+            HStack(spacing: 3) {
+                ForEach(Array(shortcut.keyCombo.keyStrings.enumerated()), id: \.offset) { index, key in
+                    if index > 0 {
+                        Text("+")
+                            .font(.system(size: 10))
+                            .foregroundStyle(textSecondary)
+                    }
+                    Text(key)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(accentColor)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 4)
+                        .background(accentColor.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            }
+        }
+        .padding(16)
+        .frame(minHeight: 130) // Fixed height for consistency
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(isHovered ? bgSecondary : bgPrimary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(bgTertiary, lineWidth: 1)
+        )
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var iconView: some View {
+        switch shortcut.action {
+        case .launchApp(let bundleId, _):
+            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+                Image(nsImage: NSWorkspace.shared.icon(forFile: url.path))
+                    .resizable()
             } else {
                 Image(systemName: "app")
                     .foregroundStyle(textSecondary)

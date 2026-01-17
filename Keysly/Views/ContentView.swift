@@ -18,6 +18,7 @@ enum NavigationItem: String, CaseIterable {
 struct ContentView: View {
     
     @Environment(AppState.self) private var appState
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selectedItem: NavigationItem = .shortcuts
     @State private var isRecording = false
     @State private var recordedKeyCombo: KeyCombo?
@@ -27,13 +28,25 @@ struct ContentView: View {
     @State private var shortcutToDelete: Shortcut?
     @State private var eventMonitor: Any?
     
-    // White & Orange Theme Colors
-    private let bgPrimary = Color(hex: 0xFFFFFF)   // Pure White
-    private let bgSecondary = Color(hex: 0xF5F5F7) // Light Grey (Sidebar)
-    private let bgTertiary = Color(hex: 0xE5E5EB)  // Lighter Grey (Cards/Hovers)
-    private let textPrimary = Color(hex: 0x000000) // Black
-    private let textSecondary = Color(hex: 0x6E6E73) // Dark Grey
-    private let accentColor = Color(hex: 0xFF9500) // Orange
+    // Theme Colors (Adaptive)
+    private var bgPrimary: Color {
+        colorScheme == .dark ? Color(hex: 0x1C1C1E) : Color(hex: 0xFFFFFF)
+    }
+    private var bgSecondary: Color {
+        colorScheme == .dark ? Color(hex: 0x2C2C2E) : Color(hex: 0xF5F5F7)
+    }
+    private var bgTertiary: Color {
+        colorScheme == .dark ? Color(hex: 0x3A3A3C) : Color(hex: 0xE5E5EB)
+    }
+    private var textPrimary: Color {
+        colorScheme == .dark ? .white : Color(hex: 0x000000)
+    }
+    private var textSecondary: Color {
+        colorScheme == .dark ? Color(hex: 0x8E8E93) : Color(hex: 0x6E6E73)
+    }
+    private var accentColor: Color {
+        Color(hex: 0xFF9500)
+    }
     
     var body: some View {
         ZStack {
@@ -46,7 +59,7 @@ struct ContentView: View {
                     .background(bgSecondary)
                     .overlay(
                         Rectangle()
-                            .fill(Color.black.opacity(0.05))
+                            .fill(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
                             .frame(width: 1),
                         alignment: .trailing
                     )
@@ -66,7 +79,7 @@ struct ContentView: View {
             }
         }
         .frame(width: 1000, height: 700)
-        .preferredColorScheme(.light) // Force Light Mode
+        // .preferredColorScheme(.light) removed to allow system/app override
         // Alerts
         .alert("Shortcut Conflict", isPresented: .init(
             get: { conflictError != nil },
@@ -117,10 +130,10 @@ struct ContentView: View {
                             
                             Spacer()
                         }
-                        .foregroundStyle(selectedItem == item ? textPrimary : textSecondary) // Black if selected, Grey if not
+                        .foregroundStyle(selectedItem == item ? textPrimary : textSecondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(selectedItem == item ? Color.black.opacity(0.05) : .clear) // Subtle highlight
+                        .background(selectedItem == item ? (colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)) : .clear)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
@@ -142,6 +155,7 @@ struct ContentView: View {
             shortcutsView
         case .wiki:
             WikiContentView(
+                bgPrimary: bgPrimary,
                 bgSecondary: bgSecondary,
                 bgTertiary: bgTertiary,
                 accentColor: accentColor,

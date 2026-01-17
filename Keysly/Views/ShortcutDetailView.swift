@@ -6,12 +6,27 @@ struct ShortcutDetailView: View {
     let onEdit: () -> Void
     let onDelete: () -> Void
     
-    // Theme Colors
-    private let bgSecondary = Color(hex: 0xF5F5F7)
-    private let accentColor = Color(hex: 0xFF9500)
-    private let textPrimary = Color(hex: 0x000000)
-    private let textSecondary = Color(hex: 0x6E6E73)
-    private let deleteColor = Color(hex: 0xFF3B30)
+    @Environment(\.colorScheme) private var colorScheme
+    
+    // Theme Colors (Adaptive)
+    private var bgPrimary: Color {
+        colorScheme == .dark ? Color(hex: 0x1C1C1E) : Color(hex: 0xFFFFFF)
+    }
+    private var bgSecondary: Color {
+        colorScheme == .dark ? Color(hex: 0x2C2C2E) : Color(hex: 0xF5F5F7)
+    }
+    private var accentColor: Color {
+        Color(hex: 0xFF9500)
+    }
+    private var textPrimary: Color {
+        colorScheme == .dark ? .white : Color(hex: 0x000000)
+    }
+    private var textSecondary: Color {
+        colorScheme == .dark ? Color(hex: 0x8E8E93) : Color(hex: 0x6E6E73)
+    }
+    private var deleteColor: Color {
+        Color(hex: 0xFF3B30)
+    }
     
     var body: some View {
         VStack(spacing: 24) {
@@ -32,9 +47,9 @@ struct ShortcutDetailView: View {
             iconView
                 .font(.system(size: 48))
                 .frame(width: 80, height: 80)
-                .background(Color.white)
+                .background(bgPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: 18))
-                .shadow(color: Color.black.opacity(0.1), radius: 6, y: 3)
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.3 : 0.1), radius: 6, y: 3)
             
             // Info
             VStack(spacing: 8) {
@@ -119,9 +134,9 @@ struct ShortcutDetailView: View {
             .padding(.bottom, 32)
         }
         .frame(width: 400, height: 480)
-        .background(Color.white)
+        .background(bgPrimary)
         .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: Color.black.opacity(0.15), radius: 20, y: 10)
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.15), radius: 20, y: 10)
     }
     
     @ViewBuilder
