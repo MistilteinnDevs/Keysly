@@ -40,7 +40,7 @@ struct ShortcutsExplorerView: View {
         
         var icon: String {
             switch self {
-            case .all: return "bolt.rectangle.fill"
+            case .all: return "rectangle.grid.2x2.fill"
             case .tag: return "tag.fill"
             }
         }

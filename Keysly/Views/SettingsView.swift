@@ -108,32 +108,60 @@ struct SettingsView: View {
                 
                 // MARK: - About Section
                 sectionContainer(title: "About") {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        // Description
                         Text("A minimalistic macOS utility for managing global keyboard shortcuts.")
                             .font(.system(size: 13))
                             .foregroundStyle(textSecondary)
+                            .lineSpacing(3)
                         
-                        HStack(spacing: 4) {
-                            Text("Made by")
-                                .font(.system(size: 12))
-                                .foregroundStyle(textSecondary.opacity(0.7))
+                        // Divider
+                        Rectangle()
+                            .fill(textSecondary.opacity(0.15))
+                            .frame(height: 1)
+                        
+                        // Credits & Links
+                        HStack(alignment: .top, spacing: 32) {
+                            // Project Info
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Open Source")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(textSecondary.opacity(0.6))
+                                    .textCase(.uppercase)
+                                
+                                Text("Mistilteinn")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(textPrimary)
+                            }
                             
-                            Link("Mistilteinn", destination: URL(string: "https://www.mistilteinn.xyz")!)
-                                .font(.system(size: 12, weight: .medium))
+                            // Links
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Links")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(textSecondary.opacity(0.6))
+                                    .textCase(.uppercase)
+                                
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Link(destination: URL(string: "https://www.mistilteinn.xyz")!) {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "globe")
+                                                .font(.system(size: 11))
+                                            Text("Website")
+                                        }
+                                    }
+                                    
+                                    Link(destination: URL(string: "https://github.com/MistilteinnDevs/Keysly")!) {
+                                        HStack(spacing: 6) {
+                                            Image(systemName: "chevron.left.forwardslash.chevron.right")
+                                                .font(.system(size: 11))
+                                            Text("GitHub")
+                                        }
+                                    }
+                                }
+                                .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(accentColor)
-                        }
-                        
-                        HStack(spacing: 16) {
-                            Link(destination: URL(string: "https://www.mistilteinn.xyz")!) {
-                                Label("Website", systemImage: "globe")
-                            }
-                            
-                            Link(destination: URL(string: "https://github.com/MistilteinnDevs/Keysly")!) {
-                                Label("GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
                             }
                         }
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(accentColor)
                     }
                 }
             }
