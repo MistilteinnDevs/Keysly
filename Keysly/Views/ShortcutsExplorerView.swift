@@ -33,6 +33,7 @@ struct ShortcutsExplorerView: View {
     
     @State private var selection: NavigationSelection = .all
     @State private var searchText = ""
+    @State private var selectedShortcut: Shortcut?
     
     var onAdd: () -> Void
     var onEdit: (Shortcut) -> Void
@@ -137,10 +138,11 @@ struct ShortcutsExplorerView: View {
                                     bgTertiary: bgTertiary,
                                     textPrimary: textPrimary,
                                     textSecondary: textSecondary,
-                                    accentColor: accentColor,
-                                    onEdit: { onEdit(shortcut) },
-                                    onDelete: { onDelete(shortcut) }
+                                    accentColor: accentColor
                                 )
+                                .onTapGesture {
+                                    selectedShortcut = shortcut
+                                }
                             }
                         }
                     }
@@ -148,6 +150,20 @@ struct ShortcutsExplorerView: View {
                     .padding(.bottom, 40)
                 }
             }
+        }
+        .sheet(item: $selectedShortcut) { shortcut in
+            ShortcutDetailView(
+                shortcut: shortcut,
+                onClose: { selectedShortcut = nil },
+                onEdit: {
+                    selectedShortcut = nil
+                    onEdit(shortcut)
+                },
+                onDelete: {
+                    selectedShortcut = nil
+                    onDelete(shortcut)
+                }
+            )
         }
     }
     
@@ -244,8 +260,7 @@ struct ShortcutExplorerCard: View {
     let textSecondary: Color
     let accentColor: Color
     
-    let onEdit: () -> Void
-    let onDelete: () -> Void
+
     
     @State private var isHovered = false
     
@@ -276,25 +291,9 @@ struct ShortcutExplorerCard: View {
             
             Spacer()
             
-            // Actions (Only visible on hover)
-            if isHovered {
-                HStack(spacing: 8) {
-                    Button(action: onEdit) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 12))
-                            .foregroundStyle(textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Button(action: onDelete) {
-                        Image(systemName: "trash")
-                            .font(.system(size: 12))
-                            .foregroundStyle(textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .transition(.opacity)
-            }
+
+            
+            // Actions (Only visible on hover) removed in favor of Detail View
             
             // Key Combo Badge
             HStack(spacing: 4) { // Spacing 4 like WikiView
