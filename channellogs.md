@@ -2,6 +2,7 @@
 
 | Commit Hash | Description |
 | :--- | :--- |
+| `3ea57fc` | chore: Update project settings |
 | `ad71578` | polish: Settings About section redesign, fix SF Symbol error |
 | `559d055` | style: Theme polish - Dark mode support, custom theme picker, minimalist settings redesign |
 | `63da8a3` | feat: Implement ShortcutDetailView (Clickable cards, hidden edit actions) and UI polish |
