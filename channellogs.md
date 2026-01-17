@@ -2,6 +2,7 @@
 
 | Commit Hash | Description |
 | :--- | :--- |
+| `ad71578` | polish: Settings About section redesign, fix SF Symbol error |
 | `559d055` | style: Theme polish - Dark mode support, custom theme picker, minimalist settings redesign |
 | `63da8a3` | feat: Implement ShortcutDetailView (Clickable cards, hidden edit actions) and UI polish |
 | `64568b8` | style: Align ShortcutsExplorer styling with WikiView (Orange keys, + separators) |
