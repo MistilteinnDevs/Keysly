@@ -2,6 +2,7 @@
 
 | Commit Hash | Description |
 | :--- | :--- |
+| `3b8dc27` | feat: Add Text Expansion / Type Commands feature with pasteboard-based typing |
 | `dde2435` | feat: Add comprehensive onboarding (5 pages), fix navigation layout, add debug reset option |
 | `3ea57fc` | chore: Update project settings |
 | `ad71578` | polish: Settings About section redesign, fix SF Symbol error |
